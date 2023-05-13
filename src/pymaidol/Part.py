@@ -1,3 +1,4 @@
+from enum import Enum
 from typing import Optional
 
 class Part:
@@ -15,20 +16,25 @@ class Part:
         self.end:int = -1 # 从本行的第几个字符结束
         self.total_start:int = total_start # 从从头开始的第几个字符开始
         self.total_end:int = -1 # 从从头开始的第几个字符结束
-        
-        
+        self.type:PartTypeEnum = PartTypeEnum.Text
         
     def __str__(self) -> str:
         return self.content
     
     def __repr__(self) -> str:
-        return self.content
+        return f"{self.type.value}, {self.content}"
     
 
-def foresee(string:str, foresee_count:int):
-    if foresee_count > len(string):
-        return False
-
+class PartTypeEnum(Enum):
+    Text = "Text" # 默认类型
+    If = "If"
+    Elif = "Elif"
+    For = "For"
+    CodeBlock = 'CodeBlock'
+    ShowBlock = "ShowBlock"
+    Comment = "Comment"
+    SingleKeyword = "SingleKeyword"
+    
 
 def PartRecognizor(template:str):
     list_of_parts:list[Part] = []
@@ -76,7 +82,7 @@ def PartRecognizor(template:str):
         current_line += 1
         current_line_index = 0
         
-    def _foresee_and_pair(foresee_consume_count:int, pair_left:list[str], pair_right:list[str], is_include_right:bool=True):
+    def _new_part_foresee_and_pair(foresee_consume_count:int, pair_left:list[str], pair_right:list[str], type:PartTypeEnum, is_include_right:bool=True):
         """_
 
         Args:
@@ -87,6 +93,7 @@ def PartRecognizor(template:str):
         nonlocal current_part, current_total_index, template
         _end_current_part_at_last_char()
         _create_new_part_at_current_char()
+        current_part.type = type
         # 消费当前的 @ 和前瞻的词语
         # 一次吃多个字符
         current_part.content = f"{current_part.content}{template[current_total_index:current_total_index+foresee_consume_count]}"
@@ -112,6 +119,7 @@ def PartRecognizor(template:str):
     while(current_total_index < len(template)):
         current_char = template[current_total_index]
         if current_char == '\n':
+            # 每一个Text的换行都要新建一个 part
             current_part.content = f"{current_part.content}{current_char}"
             _end_current_part_at_this_char()
             _consume_current_char_index_with_new_line()
@@ -119,7 +127,7 @@ def PartRecognizor(template:str):
             
         # 注释符号，一直匹配到 \n 为止
         elif current_char == '#':
-            _foresee_and_pair(1, [], ['\n'])
+            _new_part_foresee_and_pair(1, [], ['\n'], PartTypeEnum.Comment)
             
         # 可能的嵌入符号
         elif current_char == '@':
@@ -136,24 +144,24 @@ def PartRecognizor(template:str):
                 
             # 前瞻是 {，那么新建 part，匹配到 } 为止
             elif remaining.startswith('{'):
-                _foresee_and_pair(2, ['{'], ['}'])
+                _new_part_foresee_and_pair(2, ['{'], ['}'], PartTypeEnum.CodeBlock)
             
             # 前瞻是 (，那么新建 part，匹配到 ) 为止
             elif remaining.startswith('('):
-                _foresee_and_pair(2, ['('], [')'])
+                _new_part_foresee_and_pair(2, ['('], [')'], PartTypeEnum.ShowBlock)
             
             elif remaining.startswith('if('):
-                _foresee_and_pair(4, ['('], [')'])
+                _new_part_foresee_and_pair(4, ['('], [')'], PartTypeEnum.If)
                 
             elif remaining.startswith('elif('):
-                _foresee_and_pair(6, ['('], [')'])
+                _new_part_foresee_and_pair(6, ['('], [')'], PartTypeEnum.Elif)
                 
             elif remaining.startswith('for('):
-                _foresee_and_pair(5, ['('], [')'])
+                _new_part_foresee_and_pair(5, ['('], [')'], PartTypeEnum.For)
                 
             # 一直消费字符直至遇到空白符（空白符不包括在内）
             else:
-                _foresee_and_pair(1, [], [' ', '\t', '\n', '\r'], False)
+                _new_part_foresee_and_pair(1, [], [' ', '\t', '\n', '\r'], PartTypeEnum.SingleKeyword, False)
             
         # 纯文本
         else:

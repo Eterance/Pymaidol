@@ -9,7 +9,7 @@
 
 Question: Write a @(item["lang"]) program that prints "Hello World!" to the console.
 Code: @(item["code"]) (@@(item["code"]))
-目前的count： @(count) \
+目前的count： @(count)
     @if(count >= 2)
 > 2!
     @elif(count < 0)
