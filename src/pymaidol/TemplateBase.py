@@ -9,7 +9,8 @@ class TemplateBase:
         self._template:Optional[str] = template
         if self._template == None:
             self._template = self._ReadTemplate(template_file_path)
-        self._parts:list[Part] = PartRecognizor(self._template)
+        pr = PartRecognizor()
+        self._parts:list[Part] = pr.Recognize(self._template)
     
     def _ReadTemplate(self, template_file_path:Optional[str]=None)->str:
         if template_file_path == None:
