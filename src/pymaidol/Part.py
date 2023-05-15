@@ -1,5 +1,19 @@
 from enum import Enum
 from typing import Optional
+from pymaidol.Errors import UnexpectedTokenError
+
+class PartTypeEnum(Enum):
+    Text:str = "text" # 默认类型
+    If:str = "if"
+    Elif:str = "elif"
+    For:str = "for"
+    While:str = "while"
+    CodeBlock:str = 'CodeBlock'
+    ShowBlock:str = "ShowBlock"
+    Comment:str = "Comment"
+    Else:str = "else"
+    SingleKeyword:str = "SingleKeyword"
+    
 
 class Part:
     def __init__(
@@ -7,7 +21,8 @@ class Part:
         content:str, 
         start_line:int, 
         start:int,
-        total_start:int) -> None:
+        total_start:int,
+        type:PartTypeEnum=PartTypeEnum.Text) -> None:
         
         self.content = content
         self.start_line = start_line 
@@ -16,29 +31,30 @@ class Part:
         self.end:int = -1 # 从本行的第几个字符结束
         self.total_start:int = total_start # 从从头开始的第几个字符开始
         self.total_end:int = -1 # 从从头开始的第几个字符结束
-        self.type:PartTypeEnum = PartTypeEnum.Text
+        self.type:PartTypeEnum = type
+        self.condition:str = ""
+        self.body:str = ""
         
     def __str__(self) -> str:
         return self.content
     
     def __repr__(self) -> str:
-        return f"Start: {self.start_line}:{self.start}({self.total_start}), End: {self.end_line}:{self.end}({self.total_end}); {self.type.value}, {self.content}"
-    
-
-class PartTypeEnum(Enum):
-    Text = "Text" # 默认类型
-    If = "If"
-    Elif = "Elif"
-    For = "For"
-    While = "While"
-    CodeBlock = 'CodeBlock'
-    ShowBlock = "ShowBlock"
-    Comment = "Comment"
-    Else = "Else"
-    SingleKeyword = "SingleKeyword"
-    
+        return f'Start: {self.start_line}:{self.start}({self.total_start}), End: {self.end_line}:{self.end}({self.total_end}); {self.type.value}, {[self.content]}'
 
 class PartRecognizor:
+    keyword_with_condition_and_body_list = \
+    [
+        PartTypeEnum.If,
+        PartTypeEnum.Elif,
+        PartTypeEnum.For,
+        PartTypeEnum.While
+    ]
+    
+    keyword_with_only_body_list = \
+    [
+        PartTypeEnum.Else
+    ]
+    
     def __init__(self) -> None:
         self.part_list:list[Part] = []
         self._current_line_index:int = 0
@@ -71,8 +87,8 @@ class PartRecognizor:
         if self._current_part.content != "":
             self.part_list.append(self._current_part)
     
-    def _create_new_part_at_current_char(self):
-        self._current_part = Part("", self._current_line_index, self._current_chat_index_inline, self._current_char_index_total)
+    def _create_new_part_at_current_char(self, type:PartTypeEnum=PartTypeEnum.Text):
+        self._current_part = Part("", self._current_line_index, self._current_chat_index_inline, self._current_char_index_total, type)
     
     def _consume_current_char_index(self, steps:int=1):
         """
@@ -89,22 +105,21 @@ class PartRecognizor:
             self._current_chat_index_inline += steps
             self._current_char_index_total += steps
     
-    def _new_part_foresee_and_pair(self, foresee_consume_count:int, pair_left:list[str], pair_right:list[str], type:PartTypeEnum, is_include_right:bool=True):
+    def _consume_and_pair(
+        self, 
+        pair_left:list[str], 
+        pair_right:list[str], 
+        is_include_right:bool=True,
+        suppress_unpaired_error:bool = False
+        ):
         """
 
         Args:
-            consume_count (int): 第一次要被消费的字符数。注意是包括@和前瞻数，比如 @if{，那么 consume_count = 4; @，那么 consume_count = 1
-            pair_left (str): _description_
-            pair_right (str): _description_
+            pair_left (str):
+            pair_right (str):
         """
-        self._end_current_part_at_last_char()
-        self._create_new_part_at_current_char()
-        self._current_part.type = type
-        # 消费当前的 @ 和前瞻的词语
-        # 一次吃多个字符
-        self._current_part.content = f"{self._current_part.content}{self._template[self._current_char_index_total:self._current_char_index_total+foresee_consume_count]}"
-        self._consume_current_char_index(foresee_consume_count)
         # 持续消费，直到匹配到右侧
+        content_inside = ""
         pair_finder = PairFinder(pair_left, pair_right)
         while(self._current_char_index_total < len(self._template)):
             pair_result = pair_finder.IsPair(self._template[self._current_char_index_total])
@@ -112,22 +127,91 @@ class PartRecognizor:
                 if is_include_right:                    
                     self._current_part.content = f"{self._current_part.content}{self._template[self._current_char_index_total]}"
                     # 匹配到了右侧，结束当前 part
-                    self._end_current_part_at_this_char()
                     self._consume_current_char_index()
-                    self._create_new_part_at_current_char()
-                else:
-                    self._end_current_part_at_last_char()
-                    self._create_new_part_at_current_char()
                 break
+            content_inside = f"{content_inside}{self._template[self._current_char_index_total]}"
             self._current_part.content = f"{self._current_part.content}{self._template[self._current_char_index_total]}"
             self._consume_current_char_index()
+        if pair_finder.unpaired_left_count > 0 and not suppress_unpaired_error:
+            # TODO: 报错未匹配的起始位置
+            raise Exception(f"Unpaired left {pair_finder.unpaired_left_count} in template {self._template}")
+        return content_inside
     
-    def _consume_continuous_char(self, char_list:list[str], add_into_current_part:bool=True):
+    def _new_part_foresee_and_pair(
+            self, 
+            foresee_consume_count:int, 
+            pair_left:list[str], 
+            pair_right:list[str], 
+            type:PartTypeEnum, 
+            is_include_right:bool=True):
+        
+        self._end_current_part_at_last_char()
+        self._create_new_part_at_current_char()
+        self._current_part.type = type
+        # 消费当前的 @ 和前瞻的词语
+        # 一次吃多个字符
+        self._current_part.content = f"{self._current_part.content}{self._template[self._current_char_index_total:self._current_char_index_total+foresee_consume_count]}"
+        self._consume_current_char_index(foresee_consume_count)
+        # 匹配
+        self._current_part.body = self._consume_and_pair(pair_left, pair_right, is_include_right)
+        # 结束
+        self._end_current_part_at_last_char()
+        self._create_new_part_at_current_char()
+        
+    def _add_and_consume_continuous_char(self, char_list:list[str], add_into_current_part:bool=True):
         while (self._template[self._current_char_index_total] in char_list):
             if add_into_current_part:
                 self._current_part.content = f"{self._current_part.content}{self._template[self._current_char_index_total]}"
-                if self._template[self._current_char_index_total] == '\n':
-                    pass
+            self._consume_current_char_index()
+    
+    def _check_remaining_start_with(self, remaining:str, part_type_enum_list:list[PartTypeEnum])->PartTypeEnum|None:
+        """
+        检查剩余的字符串是否以 char_list 中的任意一个开头
+        """
+        for part_type in part_type_enum_list:
+            if remaining.startswith(part_type.value):
+                return part_type
+        return None
+    
+    def _keyword_with_condition_and_body_process(self, part_type:PartTypeEnum, have_condition:bool=True):
+        self._end_current_part_at_last_char()
+        self._create_new_part_at_current_char(part_type)
+        self._current_part.type = part_type
+        # 消费@关键词
+        self._current_part.content = f"{self._current_part.content}{self._template[self._current_char_index_total]}{part_type.value}"
+        self._consume_current_char_index(len(part_type.value)+1)
+        
+        if have_condition:
+            # 吃掉关键词与左圆括号之间的空白符
+            self._add_and_consume_continuous_char([' ', '\t'])
+            current_char = self._template[self._current_char_index_total]
+            if current_char != '(':
+                raise UnexpectedTokenError(
+                    line_index=self._current_line_index, 
+                    char_index_inline=self._current_chat_index_inline, 
+                    char_index_total=self._current_char_index_total, 
+                    expected='(', 
+                    got=current_char
+                    )
+            self._current_part.content = f"{self._current_part.content}{current_char}"
+            self._consume_current_char_index()
+            self._current_part.condition = self._consume_and_pair(['('], [')'])
+        
+        # 吃掉右圆括号（或者关键词）与左大括号的空白符
+        self._add_and_consume_continuous_char([' ', '\t', '\n', '\r'])
+        current_char = self._template[self._current_char_index_total]
+        if current_char != '{':
+            raise UnexpectedTokenError(
+                line_index=self._current_line_index, 
+                char_index_inline=self._current_chat_index_inline, 
+                char_index_total=self._current_char_index_total, 
+                expected='{', 
+                got=current_char
+                )
+        self._current_part.content = f"{self._current_part.content}{current_char}"
+        self._consume_current_char_index()
+        self._current_part.body = self._consume_and_pair(['{'], ['}'])
+    
     
     def Recognize(self, template:str):
         self._reset()
@@ -165,19 +249,23 @@ class PartRecognizor:
                 # 前瞻是 (，那么新建 part，匹配到 ) 为止
                 elif remaining.startswith('('):
                     self._new_part_foresee_and_pair(2, ['('], [')'], PartTypeEnum.ShowBlock)
+                                    
+                elif (part_type := self._check_remaining_start_with(remaining, self.keyword_with_condition_and_body_list)) is not None:
+                    # 处理条件和主体
+                    self._keyword_with_condition_and_body_process(part_type, True)
                 
-                elif remaining.startswith('if('):
-                    self._new_part_foresee_and_pair(4, ['('], [')'], PartTypeEnum.If)
-                    
-                elif remaining.startswith('elif('):
-                    self._new_part_foresee_and_pair(6, ['('], [')'], PartTypeEnum.Elif)
-                    
-                elif remaining.startswith('for('):
-                    self._new_part_foresee_and_pair(5, ['('], [')'], PartTypeEnum.For)
-                    
+                elif (part_type := self._check_remaining_start_with(remaining, self.keyword_with_only_body_list)) is not None:
+                    # 处理主体
+                    self._keyword_with_condition_and_body_process(part_type, False)
+                
                 # 一直消费字符直至遇到空白符（空白符不包括在内）
                 else:
-                    self._new_part_foresee_and_pair(1, [], [' ', '\t', '\n', '\r'], PartTypeEnum.SingleKeyword, False)
+                    # 消费@
+                    self._current_part.content = f"{self._current_part.content}{current_char}"
+                    self._consume_current_char_index()                    
+                    self._end_current_part_at_last_char()
+                    self._create_new_part_at_current_char(PartTypeEnum.SingleKeyword)
+                    self._consume_and_pair([], [' ', '\t', '\n', '\r'], False)
                 
             # 纯文本
             else:
@@ -201,19 +289,19 @@ class PartRecognizor:
 
 class PairFinder():
     def __init__(self, left:list[str], right:list[str]) -> None:
-        self.__unpaired_left_count = 0
+        self.unpaired_left_count = 0
         self.__left = left
         self.__right = right
     
     def IsPair(self, target:str):
         if target in self.__left:
-            self.__unpaired_left_count += 1
+            self.unpaired_left_count += 1
             return False
         elif target in self.__right:
-            if self.__unpaired_left_count == 0:
+            if self.unpaired_left_count == 0:
                 return True
             else:
-                self.__unpaired_left_count -= 1
+                self.unpaired_left_count -= 1
                 return False
         else:
             return False
