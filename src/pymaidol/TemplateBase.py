@@ -1,7 +1,7 @@
 
 import os
 from typing import Optional
-from pymaidol.Part import Part, PartRecognizor
+from pymaidol.Part import Parser
 
 
 class TemplateBase:
@@ -9,12 +9,12 @@ class TemplateBase:
         self._template:Optional[str] = template
         if self._template == None:
             self._template = self._ReadTemplate(template_file_path)
-        pr = PartRecognizor()
-        self._parts:list[Part] = pr.Recognize(self._template)
+        pr = Parser()
+        self._node = pr.Parse(self._template)
     
     def _ReadTemplate(self, template_file_path:Optional[str]=None)->str:
-        if template_file_path == None:
-            template_file_path = __file__[:-3] + ".pml"
+        if template_file_path is None:
+            template_file_path =__file__[:-3] + ".pml"
         try: 
             with open(template_file_path, "r", encoding='utf-8') as f:
                 return f.read()
@@ -25,5 +25,5 @@ class TemplateBase:
     def Render(self, **inject_kwargs):
         raise NotImplementedError()
     
-    def TranslateToPython():
+    def TranslateToPython(self):
         raise NotImplementedError()

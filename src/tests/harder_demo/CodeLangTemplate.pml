@@ -1,9 +1,13 @@
+@{
+from tqdm import tqdm
+}
 0123456789
 -- Answer the following questions about the code snippet below.
 
 @{count=1}
 @{dict2 = {1:"1212", 2:"3asx"}}
-@for(index, item in self.incontext_samples){
+@for(index, item in tqdm(self.incontext_samples))
+    {
 -- Question @(index+1) # 这是注释
 # 这也是注释
 # 这还是注释
@@ -19,7 +23,7 @@ Code: @(item["code"]) (@@(item["code"]))
 < 0???
     }
 @{count+=1}
-}
+    }
 -- Question @(item["count"])
 @while(count > 0)
 {

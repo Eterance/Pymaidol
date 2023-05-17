@@ -10,10 +10,25 @@ sys.path.append(ROOT_DIR)
 sys.path.append(SRC_DIR)
 from pymaidol.TemplateBase import TemplateBase
 
+class father:
+    def __init__(self) -> None:
+        self.a = 1
+    
+    @classmethod
+    def from_exist(cls, obj:'father'):
+        new_one = cls()
+        new_one.a = obj.a
+        return new_one
+    
+class son(father):
+    def __init__(self) -> None:
+        super().__init__()
+        self.b = 2
+    
+
 def main():
-    asas = eval("[i*2 for i in range(10)]")
-    aas:str = ""
-    print(aas.startswith("asas"))
+    sss = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+    sss = sss[:-1]
     sasas = TemplateBase(template_file_path=r"F:\Programs3\Deep_Learning_Repo\pymaidol\src\tests\harder_demo\CodeLangTemplate.pml")
     try:
         exec("print(self.incontext_samsples)", {}, {"self": sasas})

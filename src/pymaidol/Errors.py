@@ -29,3 +29,6 @@ class UnexpectedTokenError(BaseException):
         else:
             expected_string = f'{self._expected}'
         return f'{self.__class__.__name__} at Line {self.line_index}:{self.line_char_index}(total char index: {self.total_index}): Expected {expected_string}, but got {self._got}\n{self._extra_detail}'
+    
+class ImpossibleError(Exception):
+    pass
