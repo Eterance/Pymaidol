@@ -1,4 +1,5 @@
 from typing import Optional
+from pymaidol.AnnotationTypeEnum import AnnotationTypeEnum
 
 class VisibleNode:
     pass
@@ -17,7 +18,9 @@ class BaseNode:
         start:int,
         total_start:int,
         father:Optional['NonTerminalNode'] = None,
-        add_father_children:bool=True) -> None:
+        add_father_children:bool=False,
+        *args,
+        **kwargs) -> None:
         
         self.content = ""
         self.start_line = start_line 
@@ -25,7 +28,7 @@ class BaseNode:
         self.end_line = -1
         self.end:int = -1 # 从本行的第几个字符结束
         self.total_start:int = total_start # 从从头开始的第几个字符开始
-        self.total_end:int = -1 # 从从头开始的第几个字符结束
+        self.total_end:int = -1 # 从从头开始的第几个字符结束（包括这个字符，用在数组切片时要+1）
         self.father = father
         if self.father is not None and add_father_children:
             self.father.children.append(self)
@@ -55,10 +58,9 @@ class TerminalNode(BaseNode):
 class NonTerminalNode(BaseNode, InvisibleNode, HasBodyNode):
     def __init__(
         self,
-        start_line:int, 
-        start:int,
-        total_start:int) -> None: 
-        super().__init__(start_line, start, total_start)
+        *args,
+        **kwargs) -> None: 
+        super().__init__(*args, **kwargs)
         self.children:list[BaseNode] = []
         self.condition:Optional[str] = None    
     
@@ -78,7 +80,16 @@ class TextNode(TerminalNode, VisibleNode):
     pass
 
 class AnnotationNode(TerminalNode, InvisibleNode, HasBodyNode):
-    pass
+    def __init__(
+        self,
+        annotation_type:AnnotationTypeEnum,
+        *args,
+        **kwargs) -> None: 
+        super().__init__(*args, **kwargs)
+        self.type:AnnotationTypeEnum = annotation_type
+    
+    def __repr__(self) -> str:
+        return f'Start: {self.start_line}:{self.start}({self.total_start}), End: {self.end_line}:{self.end}({self.total_end}); {self.type}, {[self.content]}'
 
 # content 是不包括圆括号的表达式
 class ShowBlockNode(TerminalNode, VisibleNode, HasBodyNode):

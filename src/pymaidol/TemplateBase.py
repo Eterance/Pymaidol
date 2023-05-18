@@ -1,7 +1,7 @@
 
 import os
 from typing import Optional
-from pymaidol.Part import Parser
+from pymaidol.Parser import Parser
 
 
 class TemplateBase:
