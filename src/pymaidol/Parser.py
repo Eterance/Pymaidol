@@ -4,6 +4,7 @@ from pymaidol.AnnotationTypeEnum import AnnotationTypeEnum, FullAnnotationTypes,
 from pymaidol.Errors import ImpossibleError, MultiLineAnnotationFormatError, UnexpectedTokenError, UnknownEmbedIdentifierError
 from pymaidol.Nodes import BaseNode, CodeBlockNode, HasBodyNode, NonTerminalNode, ShowBlockNode, TerminalNode, TextNode, AnnotationNode, EmptyNode
 from pymaidol.Positions import Position
+from pymaidol.Traversers import PreOrderTraverser
 from pymaidol.keywords import KeywordsEnum, NonTerminalKeywords, TerminalKeywords, TranslateKeywords2Type
 
 
@@ -16,6 +17,8 @@ class Parser:
         self._last_line_final_char_index = -1
         self._template:str = ""
         self.__used = False
+        
+        self.clean_trailing_whitespaces:bool = True
     
     @property
     def _current_char(self):
@@ -33,7 +36,7 @@ class Parser:
     def _remains_include_current_char(self):
         return self._template[self._current_position.total:]
     
-    def _detect_annotation(self, support_annotation_types:list[AnnotationTypeEnum]=FullAnnotationTypes):
+    def _detect_annotation(self, support_annotation_types:'list[AnnotationTypeEnum]'=FullAnnotationTypes):
         """
         检测注释类型。如果当前字符不是注释，则返回None，否则返回注释类型（注释的开始符）和注释的结束符。
         Args:
@@ -60,6 +63,7 @@ class Parser:
         return None
     
     def _process_annotation(self, start_sign:AnnotationTypeEnum, end_sign:str):
+        # TODO: 清除前导空白符（如果这一行前面没有其他东西）
         self._end_current_node_at_last_char()
         self._create_new_node_at_current_char(AnnotationNode, annotation_type=start_sign)
         if not isinstance(self._current_node, AnnotationNode):
@@ -275,6 +279,7 @@ class Parser:
             self._consume_current_char_index(len(whitespace_peek)+1)
     
     def _non_terminal_node_parse(self, keyword_type:KeywordsEnum):
+        # TODO: 清除前导空白符（如果这一行前面没有其他东西）
         self._end_current_node_at_last_char()
         self._create_new_node_at_current_char(TranslateKeywords2Type(keyword_type))
         if not isinstance(self._current_node, NonTerminalNode):
@@ -315,6 +320,7 @@ class Parser:
             
             # 处理子结点
             sub_parser = Parser(self._current_node)
+            sub_parser.clean_trailing_whitespaces = False
             sub_parser.Parse(self._current_node.body)
             
             self._end_current_node_at_last_char()
@@ -390,12 +396,29 @@ class Parser:
         # 结束最后一个 part
         self._end_current_node_at_last_char()
         self.__used = True
+        self._post_process()
         return self._root
     
     def _post_process(self):
-                    pass
+        if self.clean_trailing_whitespaces == True:
+            traverser = PreOrderTraverser(self._root)
+            traverser.entered_TextNode += self._delete_trailing_whitespaces
+            traverser.traverse()
             
-        
+    def _delete_trailing_whitespaces(self, sender, text_node:TextNode):
+        # TODO: 测试
+        cleaned = ""
+        index = len(text_node.content) - 1
+        kill_whitespace = False
+        while index >= 0:
+            if text_node.content[index] == '\n':
+                cleaned = f"{text_node.content[index]}{cleaned}"
+            elif kill_whitespace == True and text_node.content[index] in [' ', '\t']:
+                pass
+            else:
+                cleaned = f"{text_node.content[index]}{cleaned}"
+                kill_whitespace = False
+        text_node.content = cleaned
 
 class PairFinder():
     def __init__(self, left:str, right:str) -> None:

@@ -3,7 +3,7 @@ from tqdm import tqdm
 }
 0123456789
 -- Answer the following questions about the code snippet below.
-/*这个也支持
+                        /*这个也支持
 这个是C的多行注释
 牛逼吧*/        
 <!--这个是html注释
@@ -15,7 +15,7 @@ from tqdm import tqdm
 @{dict2 = {1:"1212", 2:"3asx"}}
 @for(index, item in tqdm(self.incontext_samples))
     {
--- Question @(index+1) # 这是注释
+-- Question @(index+1)       # 这是注释
 # 这也是注释
 # 这还是注释
 
