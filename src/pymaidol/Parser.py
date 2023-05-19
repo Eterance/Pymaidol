@@ -5,12 +5,12 @@ from pymaidol.AnnotationTypeEnum import (AnnotationTypeEnum,
                                          FullAnnotationTypes,
                                          MultiLineAnnotationTypeEnum,
                                          SingleLineAnnotationTypeEnum)
-from pymaidol.Errors import (ImpossibleError, MultiLineAnnotationFormatError,
+from pymaidol.Errors import (MultiLineAnnotationFormatError,
                              UnexpectedTokenError, UnknownEmbedIdentifierError)
 from pymaidol.keywords import (KeywordsEnum, NonTerminalKeywords,
                                TerminalKeywords, TranslateKeywords2Type)
 from pymaidol.Nodes import (AnnotationNode, BaseNode, CodeBlockNode, EmptyNode,
-                            HasBodyNode, NonTerminalNode, ShowBlockNode,
+                            BodyComponent, NonTerminalNode, ShowBlockNode,
                             TerminalNode, TextNode)
 from pymaidol.Positions import Position
 from pymaidol.Traversers import PreOrderTraverser
@@ -81,8 +81,7 @@ class Parser:
     def _process_annotation(self, start_sign:AnnotationTypeEnum, end_sign:str):
         self._end_current_node_at_last_char()
         self._create_new_node_at_current_char(AnnotationNode, annotation_type=start_sign)
-        if not isinstance(self._current_node, AnnotationNode):
-            raise ImpossibleError()
+        assert isinstance(self._current_node, AnnotationNode)
         # 消费开始符
         self._current_node.append_content(start_sign.value)
         self._consume_current_char_index(len(start_sign.value))
@@ -202,8 +201,7 @@ class Parser:
         
         self._end_current_node_at_last_char()
         self._create_new_node_at_current_char(node_type)
-        if not isinstance(self._current_node, HasBodyNode):
-            raise ImpossibleError(f"Node type error: {node_type}")
+        assert isinstance(self._current_node, BodyComponent)
         # 消费当前的 @ 和前瞻的词语
         # 一次吃多个字符
         self._current_node.content = f"{self._current_node.content}{self._peek_several(foresee_consume_count)}"
@@ -306,8 +304,7 @@ class Parser:
     def _non_terminal_node_parse(self, keyword_type:KeywordsEnum):
         self._end_current_node_at_last_char()
         self._create_new_node_at_current_char(TranslateKeywords2Type(keyword_type))
-        if not isinstance(self._current_node, NonTerminalNode):
-            raise ImpossibleError(f"Current node is not NonTerminalNode, but {type(self._current_node)}")        
+        assert isinstance(self._current_node, NonTerminalNode)  
         # 清除前导空白符（如果这一行前面没有其他东西，也就是有缩进）
         if self.root.children[-1].start.line_index == self._current_node.start.line_index and self.root.children[-1].content.strip() == "":
             #self._current_node.content = f"{self._root.children[-1].content}{self._current_node.content}"
@@ -361,8 +358,7 @@ class Parser:
     def _terminal_keyword_process(self, keyword_type:KeywordsEnum):
         self._end_current_node_at_last_char()
         self._create_new_node_at_current_char(TranslateKeywords2Type(keyword_type))
-        if not isinstance(self._current_node, TerminalNode):
-            raise ImpossibleError(f"Current node is not TerminalNode, but {type(self._current_node)}")
+        assert isinstance(self._current_node, TerminalNode)
         # 消费@关键词
         self._current_node.content = f"{self._current_node.content}{self._current_char}{keyword_type.value}"
         self._consume_current_char_index(len(keyword_type.value)+1)
@@ -433,6 +429,7 @@ class Parser:
             traverser = PreOrderTraverser(self.root)
             traverser.entered_TextNode += self._delete_trailing_whitespaces
             traverser.traverse()
+            traverser.entered_TextNode -= self._delete_trailing_whitespaces
             
     def _delete_trailing_whitespaces(self, sender:PreOrderTraverser, text_node:TextNode):
         cleaned = ""

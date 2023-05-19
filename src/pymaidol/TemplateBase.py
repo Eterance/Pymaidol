@@ -2,15 +2,21 @@
 import os
 from typing import Optional
 from pymaidol.Parser import Parser
+from abc import ABC
+
+from pymaidol.SyntaxChecker import SyntaxChecker
 
 
-class TemplateBase:
+class TemplateBase(ABC):
     def __init__(self, template:Optional[str]=None, template_file_path:Optional[str]=None) -> None:  
         self._template:Optional[str] = template
         if self._template == None:
             self._template = self._ReadTemplate(template_file_path)
         pr = Parser(self._template)
         self._node = pr.Parse()
+        sc = SyntaxChecker()
+        node2 = sc.Check(self._node)
+        self._node = node2
     
     def _ReadTemplate(self, template_file_path:Optional[str]=None)->str:
         if template_file_path is None:

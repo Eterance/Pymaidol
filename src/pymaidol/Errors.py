@@ -48,3 +48,19 @@ class UnknownEmbedIdentifierError(BaseException):
     @property
     def Message(self):
         return f'{self.__class__.__name__} at {self.position.FullDescription}: Unknown "@{self.unknown_identifier}". If you want to write "@" in template, use "@@" instead.'
+
+class LackingConditionError(BaseException):
+    @property
+    def Message(self):
+        return f'{self.__class__.__name__} at {self.position.FullDescription}: Need Condition'
+
+class ElseExtraConditionError(BaseException):
+    @property
+    def Message(self):
+        return f'{self.__class__.__name__} at {self.position.FullDescription}: "else" should not have any condition'
+    
+
+class BranchError(BaseException):
+    @property
+    def Message(self):
+        return f'{self.__class__.__name__} at {self.position.FullDescription}: Lacking "if" statement'

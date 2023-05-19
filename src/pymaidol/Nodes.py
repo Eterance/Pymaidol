@@ -1,18 +1,35 @@
 from typing import Optional
 from pymaidol.AnnotationTypeEnum import AnnotationTypeEnum
 from pymaidol.Positions import Position
+from abc import ABC
 
-class VisibleNode:
+class ComponentOrRole(ABC):
+    '''
+    通过继承该类，实现的抽象子类可以用作其他结点类的组件类被继承。\n
+    可以往实例结点中添加成员变量，或者赋予实例结点某种身份。
+    '''
     pass
 
-class InvisibleNode:
+class VisibleRole(ComponentOrRole, ABC):
     pass
 
-class HasBodyNode:
+class InvisibleRole(ComponentOrRole, ABC):
+    pass
+
+class BodyComponent(ComponentOrRole, ABC):
     def __init__(self) -> None:
         self.body:str = ""
+        
 
-class BaseNode: 
+class BranchRole(ComponentOrRole, ABC):
+    def __init__(self) -> None: 
+        self.previous_branch:Optional[BranchRole] = None
+        self.next_branch:Optional[BranchRole] = None
+        
+class LoopRole(ComponentOrRole, ABC):
+    pass
+
+class BaseNode(ABC): 
     def __init__(
         self,
         start_position:Position,
@@ -49,10 +66,10 @@ class BaseNode:
         new_one.father = baseNode.father
         return new_one
     
-class TerminalNode(BaseNode):
+class TerminalNode(BaseNode, ABC):
     pass
     
-class NonTerminalNode(BaseNode, InvisibleNode, HasBodyNode):
+class NonTerminalNode(BaseNode, InvisibleRole, BodyComponent, ABC):
     def __init__(
         self,
         *args,
@@ -73,10 +90,10 @@ class NonTerminalNode(BaseNode, InvisibleNode, HasBodyNode):
             new_one.body = baseNode.body
         return new_one
 
-class TextNode(TerminalNode, VisibleNode):
+class TextNode(TerminalNode, VisibleRole):
     pass
 
-class AnnotationNode(TerminalNode, InvisibleNode, HasBodyNode):
+class AnnotationNode(TerminalNode, InvisibleRole, BodyComponent):
     def __init__(
         self,
         annotation_type:AnnotationTypeEnum,
@@ -89,33 +106,33 @@ class AnnotationNode(TerminalNode, InvisibleNode, HasBodyNode):
         return f'{self.PositionString}; {self.type}, {[self.content]}'
 
 # content 是不包括圆括号的表达式
-class ShowBlockNode(TerminalNode, VisibleNode, HasBodyNode):
+class ShowBlockNode(TerminalNode, VisibleRole, BodyComponent):
     pass
 
 # content 是不包括花括号的python代码体
-class CodeBlockNode(TerminalNode, InvisibleNode, HasBodyNode):
+class CodeBlockNode(TerminalNode, InvisibleRole, BodyComponent):
     pass
 
-class IfNode(NonTerminalNode):
+class IfNode(NonTerminalNode, BranchRole):
     pass
 
-class ElifNode(NonTerminalNode):
+class ElifNode(NonTerminalNode, BranchRole):
     pass
 
 # self.condition 无意义
-class ElseNode(NonTerminalNode):
+class ElseNode(NonTerminalNode, BranchRole):
     pass
 
-class ForNode(NonTerminalNode):
+class ForNode(NonTerminalNode, LoopRole):
     pass
 
-class WhileNode(NonTerminalNode):
+class WhileNode(NonTerminalNode, LoopRole):
     pass
 
-class BreakNode(TerminalNode, InvisibleNode):
+class BreakNode(TerminalNode, InvisibleRole):
     pass
 
-class ContinueNode(TerminalNode, InvisibleNode):
+class ContinueNode(TerminalNode, InvisibleRole):
     pass
 
 class EmptyNode(NonTerminalNode):
