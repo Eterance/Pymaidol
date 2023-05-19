@@ -21,7 +21,7 @@ from tqdm import tqdm
 
 Question: Write a @(item["lang"]) program that prints "Hello World!" to the console. 
 Code: @(item["code"]) (@@(item["code"]))
-目前的count： @(count)
+目前的count： @(count)                  
     @if(count >= 2)
     {
 > 2!
@@ -36,6 +36,7 @@ Code: @(item["code"]) (@@(item["code"]))
 {
 @(count)
 @{count -= 1}
+@(count+2)
 }
 
 Question: Write a @(query_samples['lang']) program that prints "Hello World!" to the console.

@@ -1,7 +1,14 @@
-from pythondelegate.event_handler import EventHandler
-from pymaidol.Nodes import *
+from abc import ABC, abstractmethod
 
-class TraverserBase():
+from pythondelegate.event_handler import EventHandler
+
+from pymaidol.Nodes import (AnnotationNode, BaseNode, BreakNode, CodeBlockNode,
+                            ContinueNode, ElifNode, ElseNode, EmptyNode,
+                            ForNode, IfNode, NonTerminalNode, ShowBlockNode,
+                            TerminalNode, TextNode, WhileNode)
+
+
+class TraverserBase(ABC):
     def __init__(self, tree_root:BaseNode):
         self.entered_BaseNode = EventHandler[BaseNode]()
         self.entered_TerminalNode = EventHandler[TerminalNode]()
@@ -55,9 +62,12 @@ class TraverserBase():
         if type(node) == EmptyNode: 
             self.entered_EmptyNode(self, node)
     
-    def traverse(self, node:BaseNode):
-        raise NotImplementedError(f"Method {type(self)}.traverse() is not implemented.")
-        self._event_invoke(node)
+    def traverse(self):
+        self._recursive_traverse(self.tree_root)
+    
+    @abstractmethod
+    def _recursive_traverse(self, node:BaseNode):
+        pass
 
 
 class PreOrderTraverser(TraverserBase):
@@ -65,19 +75,19 @@ class PreOrderTraverser(TraverserBase):
         先序（先根）遍历语法树。
     """
     # Override
-    def traverse(self, node:BaseNode):
+    def _recursive_traverse(self, node:BaseNode):
         self._event_invoke(node)
         if isinstance(node, NonTerminalNode):
             for child in node.children:
-                self.traverse(child)
+                self._recursive_traverse(child)
         
 class InOrderTraverser(TraverserBase):
     """
         中序（后根）遍历语法树。
     """
     # Override
-    def traverse(self, node:BaseNode):
+    def _recursive_traverse(self, node:BaseNode):
         if isinstance(node, NonTerminalNode):
             for child in node.children:
-                self.traverse(child)
+                self._recursive_traverse(child)
         self._event_invoke(node)

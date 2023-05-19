@@ -1,40 +1,56 @@
 from enum import Enum
 from typing import Optional, Union
-from pymaidol.AnnotationTypeEnum import AnnotationTypeEnum, FullAnnotationTypes, SingleLineAnnotationTypeEnum, MultiLineAnnotationTypeEnum
-from pymaidol.Errors import ImpossibleError, MultiLineAnnotationFormatError, UnexpectedTokenError, UnknownEmbedIdentifierError
-from pymaidol.Nodes import BaseNode, CodeBlockNode, HasBodyNode, NonTerminalNode, ShowBlockNode, TerminalNode, TextNode, AnnotationNode, EmptyNode
+
+from pymaidol.AnnotationTypeEnum import (AnnotationTypeEnum,
+                                         FullAnnotationTypes,
+                                         MultiLineAnnotationTypeEnum,
+                                         SingleLineAnnotationTypeEnum)
+from pymaidol.Errors import (ImpossibleError, MultiLineAnnotationFormatError,
+                             UnexpectedTokenError, UnknownEmbedIdentifierError)
+from pymaidol.keywords import (KeywordsEnum, NonTerminalKeywords,
+                               TerminalKeywords, TranslateKeywords2Type)
+from pymaidol.Nodes import (AnnotationNode, BaseNode, CodeBlockNode, EmptyNode,
+                            HasBodyNode, NonTerminalNode, ShowBlockNode,
+                            TerminalNode, TextNode)
 from pymaidol.Positions import Position
 from pymaidol.Traversers import PreOrderTraverser
-from pymaidol.keywords import KeywordsEnum, NonTerminalKeywords, TerminalKeywords, TranslateKeywords2Type
 
 
 class Parser:    
-    def __init__(self, root_node:Optional[NonTerminalNode]=None) -> None:
+    def __init__(
+        self, 
+        template:str, 
+        root_node:Optional[NonTerminalNode]=None, 
+        start:Position = Position.Default(), 
+        end:Optional[Position] = None
+        ) -> None:
         # 指的是当前未被消费的字符的位置。如果当前字符被消费，则应该立即步进1.
-        self._current_position:Position = Position.Default()
-        self._root = root_node if root_node else EmptyNode(0, 0, 0)
-        self._current_node:BaseNode = TextNode(self._current_position, father=self._root)
+        self._current_position:Position = start
+        # end 的行号和行内字符序号不重要
+        self._end:Position = end if end is not None else Position(0, 0, len(template)-1)
+        self.root = root_node if root_node else EmptyNode(0, 0, 0)
+        self._current_node:BaseNode = TextNode(self._current_position, father=self.root)
         self._last_line_final_char_index = -1
-        self._template:str = ""
+        self.template:str = template
         self.__used = False
         
         self.clean_trailing_whitespaces:bool = True
     
     @property
     def _current_char(self):
-        return self._template[self._current_position.total]
+        return self.template[self._current_position.total]
     
     def _peek_several(self, char_count):
         end = self._current_position.total + char_count
-        return self._template[self._current_position.total:end]
+        return self.template[self._current_position.total:end]
     
     @property
     def _remains(self):
-        return self._template[self._current_position.total+1:]
+        return self.template[self._current_position.total+1:]
     
     @property
     def _remains_include_current_char(self):
-        return self._template[self._current_position.total:]
+        return self.template[self._current_position.total:]
     
     def _detect_annotation(self, support_annotation_types:'list[AnnotationTypeEnum]'=FullAnnotationTypes):
         """
@@ -63,7 +79,6 @@ class Parser:
         return None
     
     def _process_annotation(self, start_sign:AnnotationTypeEnum, end_sign:str):
-        # TODO: 清除前导空白符（如果这一行前面没有其他东西）
         self._end_current_node_at_last_char()
         self._create_new_node_at_current_char(AnnotationNode, annotation_type=start_sign)
         if not isinstance(self._current_node, AnnotationNode):
@@ -72,7 +87,7 @@ class Parser:
         self._current_node.append_content(start_sign.value)
         self._consume_current_char_index(len(start_sign.value))
         # 匹配注释体
-        self._current_node.body = self._consume_and_pair("", end_sign)
+        self._current_node.body, _, _ = self._consume_and_pair("", end_sign)
         # 多行注释时，检查注释结束符后面是否有除了空白字符以外的字符
         # 有则报错
         if isinstance(start_sign, MultiLineAnnotationTypeEnum):
@@ -83,9 +98,14 @@ class Parser:
                 # 空白和换行符也算在多行注释里
                 self._current_node.append_content(f"{whitespace_peek}\n")
                 self._consume_current_char_index(len(whitespace_peek) + 1)
+        # 清除前导空白符（如果这一行前面没有其他东西，也就是有缩进）
+        if self.root.children[-1].start.line_index == self._current_node.start.line_index and self.root.children[-1].content.strip() == "":
+            #self._current_node.content = f"{self._root.children[-1].content}{self._current_node.content}"
+            self._current_node.start = self.root.children[-1].start
+            self.root.children.pop()
         # 如果上一个结点结束行和当前注释结点的起始相同（也就是注释不是开始于单独一行），则在上一个结点最后面加一个回车
-        if len(self._root.children) > 0 and self._root.children[-1].end_position.line_index == self._current_node.start_position.line_index:
-            self._root.children[-1].append_content('\n')
+        if len(self.root.children) > 0 and self.root.children[-1].end.line_index == self._current_node.start.line_index:
+            self.root.children[-1].append_content('\n')
         # 结束
         self._end_current_node_at_last_char()
         self._create_new_node_at_current_char()
@@ -94,22 +114,22 @@ class Parser:
         end_line = self._current_position.line_index if self._current_position.char_index != 0 else self._current_position.line_index - 1
         end = self._current_position.char_index - 1 if self._current_position.char_index != 0 else self._last_line_final_char_index
         total_end = self._current_position.total - 1
-        self._current_node.end_position = Position(end_line, end, total_end)
+        self._current_node.end = Position(end_line, end, total_end)
         if self._current_node.content != "":
-            self._root.children.append(self._current_node)
+            self.root.children.append(self._current_node)
     
     def _end_current_part_at_this_char(self):
         end_line = self._current_position.line_index
         end = self._current_position.char_index
         total_end = self._current_position.total
-        self._current_node.end_position = Position(end_line, end, total_end)
+        self._current_node.end = Position(end_line, end, total_end)
         if self._current_node.content != "":
-            self._root.children.append(self._current_node)
+            self.root.children.append(self._current_node)
     
     def _create_new_node_at_current_char(self, type:type[BaseNode]=TextNode, **kwargs):
         self._current_node = type(
             start_position=self._current_position,
-            father=self._root,
+            father=self.root,
             **kwargs)
     
     def _consume_current_char_index(self, steps:int=1):
@@ -150,10 +170,12 @@ class Parser:
         """
         # TODO: 处理左右长度不相等的情况
         # 持续消费，直到匹配到右侧
+        content_start = self._current_position
+        content_end = content_start
         pair_step = len(pair_right)
         content_inside = ""
         pair_finder = PairFinder(pair_left, pair_right)
-        while(self._current_position.total < len(self._template)):
+        while(self._current_position.total < len(self.template)):
             pair_result = pair_finder.IsPair(self._peek_several(pair_step))
             if pair_result:
                 if is_include_right:                    
@@ -162,11 +184,12 @@ class Parser:
                 break
             content_inside = f"{content_inside}{self._current_char}"
             self._current_node.content = f"{self._current_node.content}{self._current_char}"
+            content_end = self._current_position
             self._consume_current_char_index()
         if pair_finder.unpaired_left_count > 0 and not suppress_unpaired_error:
             # TODO: 报错未匹配的起始位置
-            raise Exception(f"Unpaired left {pair_finder.unpaired_left_count} in template {self._template}")
-        return content_inside
+            raise Exception(f"Unpaired left {pair_finder.unpaired_left_count} in template {self.template}")
+        return content_inside, content_start, content_end
     
     def _new_node_foresee_and_pair(
             self, 
@@ -174,7 +197,8 @@ class Parser:
             pair_left:str, 
             pair_right:str, 
             node_type:type[NonTerminalNode|AnnotationNode], 
-            is_include_right:bool=True):
+            is_include_right:bool=True,
+            is_clean_whitespace:bool=True):
         
         self._end_current_node_at_last_char()
         self._create_new_node_at_current_char(node_type)
@@ -185,9 +209,10 @@ class Parser:
         self._current_node.content = f"{self._current_node.content}{self._peek_several(foresee_consume_count)}"
         self._consume_current_char_index(foresee_consume_count)
         # 匹配
-        self._current_node.body = self._consume_and_pair(pair_left, pair_right, is_include_right)
+        self._current_node.body, _, _ = self._consume_and_pair(pair_left, pair_right, is_include_right)
         # 结束
-        self._try_discard_continuous_whitespaces_until_linefeed()
+        if is_clean_whitespace == True:
+            self._try_discard_continuous_whitespaces_until_linefeed()
         self._end_current_node_at_last_char()
         self._create_new_node_at_current_char()
         
@@ -207,7 +232,7 @@ class Parser:
         include_current_chat:bool=False
         ):
         start = self._current_position.total if include_current_chat else self._current_position.total+1
-        remaining:str = self._template[start:]
+        remaining:str = self.template[start:]
         _index = 0
         _peeked = ""
         while (_index < len(remaining)):
@@ -224,7 +249,7 @@ class Parser:
         include_current_chat:bool=True
         ):
         start = self._current_position.total if include_current_chat else self._current_position.total+1
-        remaining:str = self._template[start:]
+        remaining:str = self.template[start:]
         _index = 0
         _peeked = ""
         while (_index < len(remaining)):
@@ -279,11 +304,15 @@ class Parser:
             self._consume_current_char_index(len(whitespace_peek)+1)
     
     def _non_terminal_node_parse(self, keyword_type:KeywordsEnum):
-        # TODO: 清除前导空白符（如果这一行前面没有其他东西）
         self._end_current_node_at_last_char()
         self._create_new_node_at_current_char(TranslateKeywords2Type(keyword_type))
         if not isinstance(self._current_node, NonTerminalNode):
-            raise ImpossibleError(f"Current node is not NonTerminalNode, but {type(self._current_node)}")
+            raise ImpossibleError(f"Current node is not NonTerminalNode, but {type(self._current_node)}")        
+        # 清除前导空白符（如果这一行前面没有其他东西，也就是有缩进）
+        if self.root.children[-1].start.line_index == self._current_node.start.line_index and self.root.children[-1].content.strip() == "":
+            #self._current_node.content = f"{self._root.children[-1].content}{self._current_node.content}"
+            self._current_node.start = self.root.children[-1].start
+            self.root.children.pop()
         # 消费@关键词
         self._current_node.content = f"{self._current_node.content}{self._current_char}{keyword_type.value}"
         self._consume_current_char_index(len(keyword_type.value)+1)
@@ -295,7 +324,7 @@ class Parser:
             self._current_node.append_content(f"{peek}(")
             self._consume_current_char_index(len(peek)+1)
             # 消费后，当前的字符应该是左圆括号后的条件表达式的第一个字符
-            self._current_node.condition = self._consume_and_pair('(', ')', is_include_right=False)
+            self._current_node.condition, _, _ = self._consume_and_pair('(', ')', is_include_right=False)
             # 消费右圆括号  
             self._current_node.append_content(f")")      
             self._consume_current_char_index()
@@ -308,20 +337,21 @@ class Parser:
             self._consume_current_char_index(len(peek)+1)
             # 消费后，当前的字符应该是左大括号后的body的第一个字符
             self._try_discard_continuous_whitespaces_until_linefeed()
-            self._current_node.body = self._consume_and_pair('{', '}', is_include_right=False)
-            # 清除右大括号前的空白符
-            _, after_whitespace_peek = self._peek_while_from_tail(self._current_node.body, [' ', '\t'])
+            self._current_node.body, body_start, body_end = self._consume_and_pair('{', '}', is_include_right=False)
+            # 清除右大括号前的空白符，遇到换行符停止（不清除换行符）
+            whitespace, after_whitespace_peek = self._peek_while_from_tail(self._current_node.body, [' ', '\t'])
             if after_whitespace_peek.endswith('\n'):
-                self._current_node.body = after_whitespace_peek[:-1]
+                self._current_node.body = after_whitespace_peek
+                body_end = Position(body_end.line_index, body_end.char_index-len(whitespace), body_end.total-len(whitespace))
             # 右大括号
             self._current_node.append_content("}")    
             self._consume_current_char_index()
             self._try_discard_continuous_whitespaces_until_linefeed()
             
             # 处理子结点
-            sub_parser = Parser(self._current_node)
+            sub_parser = Parser(self.template, self._current_node, body_start, body_end)
             sub_parser.clean_trailing_whitespaces = False
-            sub_parser.Parse(self._current_node.body)
+            sub_parser.Parse()
             
             self._end_current_node_at_last_char()
             self._create_new_node_at_current_char()
@@ -341,11 +371,10 @@ class Parser:
         self._end_current_node_at_last_char()
         self._create_new_node_at_current_char()
     
-    def Parse(self, template:str):
+    def Parse(self):
         if self.__used == True:
             raise Exception("Parser can only be used once.")
-        self._template = template
-        while(self._current_position.total < len(self._template)):
+        while(self._current_position.total <= self._end.total):
             if self._current_char == '\n':
                 # 每一个Text的换行都要新建一个 part
                 self._current_node.content = f"{self._current_node.content}{self._current_char}"
@@ -374,7 +403,7 @@ class Parser:
                 
                 # 前瞻是 (，那么新建 part，匹配到 ) 为止
                 elif self._remains.startswith('('):
-                    self._new_node_foresee_and_pair(2, '(', ')', ShowBlockNode)
+                    self._new_node_foresee_and_pair(2, '(', ')', ShowBlockNode, is_clean_whitespace=False)
                                     
                 elif (keyword_type := self._non_terminal_keyword_check_type()) is not None:
                     self._non_terminal_node_parse(keyword_type)
@@ -397,27 +426,28 @@ class Parser:
         self._end_current_node_at_last_char()
         self.__used = True
         self._post_process()
-        return self._root
+        return self.root
     
     def _post_process(self):
         if self.clean_trailing_whitespaces == True:
-            traverser = PreOrderTraverser(self._root)
+            traverser = PreOrderTraverser(self.root)
             traverser.entered_TextNode += self._delete_trailing_whitespaces
             traverser.traverse()
             
-    def _delete_trailing_whitespaces(self, sender, text_node:TextNode):
-        # TODO: 测试
+    def _delete_trailing_whitespaces(self, sender:PreOrderTraverser, text_node:TextNode):
         cleaned = ""
         index = len(text_node.content) - 1
         kill_whitespace = False
         while index >= 0:
             if text_node.content[index] == '\n':
                 cleaned = f"{text_node.content[index]}{cleaned}"
+                kill_whitespace = True
             elif kill_whitespace == True and text_node.content[index] in [' ', '\t']:
                 pass
             else:
                 cleaned = f"{text_node.content[index]}{cleaned}"
                 kill_whitespace = False
+            index -= 1
         text_node.content = cleaned
 
 class PairFinder():

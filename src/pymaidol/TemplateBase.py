@@ -9,8 +9,8 @@ class TemplateBase:
         self._template:Optional[str] = template
         if self._template == None:
             self._template = self._ReadTemplate(template_file_path)
-        pr = Parser()
-        self._node = pr.Parse(self._template)
+        pr = Parser(self._template)
+        self._node = pr.Parse()
     
     def _ReadTemplate(self, template_file_path:Optional[str]=None)->str:
         if template_file_path is None:

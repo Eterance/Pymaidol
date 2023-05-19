@@ -31,4 +31,4 @@ class Position():
         return f"line {self.line_index} char {self.char_index} (total {self.total})"
     
     def __repr__(self):
-        return f"{self.line_index}:{self.char_index}({self.total})"
+        return f"Position @{str(self)}"

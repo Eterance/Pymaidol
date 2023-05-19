@@ -22,8 +22,8 @@ class BaseNode:
         **kwargs) -> None:
         
         self.content = ""
-        self.start_position:Position = start_position        
-        self.end_position:Position = Position.Default()
+        self.start:Position = start_position        
+        self.end:Position = Position.Default()
         self.father = father
         if self.father is not None and add_father_children:
             self.father.children.append(self)
@@ -33,7 +33,7 @@ class BaseNode:
     
     @property
     def PositionString(self):
-        return f"Start: {self.start_position}, End: {self.end_position}"
+        return f"Start: {self.start}, End: {self.end}"
     
     def __repr__(self) -> str:
         return f'{self.PositionString}; {type(self)}, {[self.content]}'
@@ -43,9 +43,9 @@ class BaseNode:
     
     @classmethod
     def FromInstance(cls, baseNode:'BaseNode'):
-        new_one = cls(baseNode.start_position)
+        new_one = cls(baseNode.start)
         new_one.content = baseNode.content
-        new_one.end_position = baseNode.end_position
+        new_one.end = baseNode.end
         new_one.father = baseNode.father
         return new_one
     
