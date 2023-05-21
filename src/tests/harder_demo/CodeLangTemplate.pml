@@ -41,11 +41,11 @@ nothing
 }
     
 -- Question @(count)
-@while(count > 0 and count < 3)
+@while(True)
 {
+@{count -= 1}
 count == @(count)
-count -= 1 == @{count -= 1}
-count+2 == @(count+2)
+    @if (count < 0){@break;}
 }
 Question: Write a @(query_sample['lang']) program that prints "Hello World!" to the console.
 Code:

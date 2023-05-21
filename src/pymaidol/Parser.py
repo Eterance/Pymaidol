@@ -98,7 +98,9 @@ class Parser:
                 self._current_node.append_content(f"{whitespace_peek}\n")
                 self._consume_current_char_index(len(whitespace_peek) + 1)
         # 清除前导空白符（如果这一行前面没有其他东西，也就是有缩进）
-        if self.root.children[-1].start.line_index == self._current_node.start.line_index and self.root.children[-1].content.strip() == "":
+        if len(self.root.children) > 0 \
+            and self.root.children[-1].start.line_index == self._current_node.start.line_index \
+            and self.root.children[-1].content.strip() == "":
             #self._current_node.content = f"{self._root.children[-1].content}{self._current_node.content}"
             self._current_node.start = self.root.children[-1].start
             self.root.children.pop()
@@ -287,6 +289,7 @@ class Parser:
         """
         检查剩余的字符串是否以 char_list 中的任意一个开头
         """
+        # TODO: 当 break, continue 单独一行时，消除前导、后随空白符和换行符
         _peek, _ = self._peek_until([';'])
         for keyword_type in TerminalKeywords:
             if _peek == keyword_type.value:
@@ -306,7 +309,9 @@ class Parser:
         self._create_new_node_at_current_char(TranslateKeywords2Type(keyword_type))
         assert isinstance(self._current_node, NonTerminalNode)  
         # 清除前导空白符（如果这一行前面没有其他东西，也就是有缩进）
-        if self.root.children[-1].start.line_index == self._current_node.start.line_index and self.root.children[-1].content.strip() == "":
+        if len(self.root.children) > 0 \
+            and self.root.children[-1].start.line_index == self._current_node.start.line_index \
+            and self.root.children[-1].content.strip() == "":
             #self._current_node.content = f"{self._root.children[-1].content}{self._current_node.content}"
             self._current_node.start = self.root.children[-1].start
             self.root.children.pop()
@@ -360,7 +365,8 @@ class Parser:
         self._create_new_node_at_current_char(TranslateKeywords2Type(keyword_type))
         assert isinstance(self._current_node, TerminalNode)
         # 消费@关键词
-        self._current_node.content = f"{self._current_node.content}{self._current_char}{keyword_type.value}"
+        # self._current_char is '@'
+        self._current_node.content = f"{self._current_node.content}{keyword_type.value}"
         self._consume_current_char_index(len(keyword_type.value)+1)
         # 消费掉分号
         self._consume_current_char_index()

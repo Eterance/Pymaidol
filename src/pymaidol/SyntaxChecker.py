@@ -25,6 +25,9 @@ class SyntaxChecker():
         return root
     
     def _construct_if_branches(self, sender:PreOrderTraverser, node:IfNode):
+        # 不知道为什么没有在初始化时拥有属性，因此在这里定义
+        node.previous_branch = None
+        node.next_branch = None
         if node.condition is None:
             raise LackingConditionError(node.start)
         father = node.father
@@ -32,11 +35,14 @@ class SyntaxChecker():
         index = father.children.index(node)
         index += 1
         previous = node
+        # 检查后续连续的 elif 和 else 结点，将它们构造成以 if 结点为头结点的链表
         while index < len(father.children):
             current = father.children[index]
             if not isinstance(current, (ElifNode, ElseNode)):
                 break
             else:
+                current.previous_branch = None
+                current.next_branch = None
                 if isinstance(current, ElifNode) and current.condition is None:
                     raise LackingConditionError(current.start)
                 if isinstance(current, ElseNode) and current.condition is not None:

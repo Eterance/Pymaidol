@@ -3,13 +3,15 @@ import os
 from typing import Any, Optional, final
 from pymaidol.Executor import Executor
 from pymaidol.Parser import Parser
-from abc import ABC
+from abc import ABC, abstractmethod
+import inspect
 
 from pymaidol.SyntaxChecker import SyntaxChecker
 
 sss = 20
 
 class TemplateBase(ABC):
+    @abstractmethod
     def __init__(self, template:Optional[str]=None, template_file_path:Optional[str]=None) -> None:  
         self._template:Optional[str] = template
         self._template_file_path = template_file_path
@@ -36,7 +38,9 @@ class TemplateBase(ABC):
     @final
     def _ReadTemplate(self, template_file_path:Optional[str]=None)->str:
         if template_file_path is None:
-            template_file_path =__file__[:-3] + ".pml"
+            # 获取类的文件路径
+            # https://stackoverflow.com/a/697395
+            template_file_path = inspect.getfile(self.__class__)[:-3] + ".pml"
         try: 
             with open(template_file_path, "r", encoding='utf-8') as f:
                 return f.read()

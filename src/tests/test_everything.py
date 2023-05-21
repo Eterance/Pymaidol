@@ -11,6 +11,7 @@ sys.path.append(ROOT_DIR)
 sys.path.append(SRC_DIR)
 from pymaidol.TemplateBase import TemplateBase
 from pymaidol.AnnotationTypeEnum import MultiLineAnnotationTypeEnum
+from tests.harder_demo.CodeLangTemplate import CodeLangTemplate
 
 gol = 23
 class father:
@@ -38,7 +39,7 @@ class son(father):
 def main():
     with open(r"F:\Programs3\Deep_Learning_Repo\pymaidol\src\tests\harder_demo\codelang.json", "r", encoding='utf-8') as f: 
         data = json.load(f)
-    sasas = TemplateBase(template_file_path=r"F:\Programs3\Deep_Learning_Repo\pymaidol\src\tests\harder_demo\CodeLangTemplate.pml")
+    sasas = CodeLangTemplate()
     kwargs = {"incontext_samples": data[0:3], "query_sample": data[3]}
     prompt = sasas.Render(kwargs)
     print(prompt)

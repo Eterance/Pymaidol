@@ -103,5 +103,10 @@ class Executor:
                     exec(node.body, global_var, local_var)
                 except:
                     raise NotImplementedError() # TODO: error handling
-            # TODO: break and continue
+                
+            elif type(node) == BreakNode:
+                return ControlResultEnum.Break
+            
+            elif type(node) == ContinueNode:
+                return ControlResultEnum.Continue
         return ControlResultEnum.Default
