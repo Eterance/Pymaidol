@@ -2,6 +2,7 @@ import json
 import os
 import random
 import sys
+from tqdm import tqdm
 
 
 ROOT_DIR = os.path.join(os.path.dirname(__file__), "../../")
@@ -11,6 +12,7 @@ sys.path.append(SRC_DIR)
 from pymaidol.TemplateBase import TemplateBase
 from pymaidol.AnnotationTypeEnum import MultiLineAnnotationTypeEnum
 
+gol = 23
 class father:
     def __init__(self) -> None:
         self.a = 1
@@ -25,19 +27,21 @@ class son(father):
     def __init__(self) -> None:
         super().__init__()
         self.b = 2
+        
+    def exec(self):
+        alfa = 1
+        liker = "sasas"
+        gol = 2234234
+        print(gol)
     
 
 def main():
-    sss = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
-    sss = sss[:-1]
-    sd =  23
-    result = isinstance(MultiLineAnnotationTypeEnum.C, MultiLineAnnotationTypeEnum)
+    with open(r"F:\Programs3\Deep_Learning_Repo\pymaidol\src\tests\harder_demo\codelang.json", "r", encoding='utf-8') as f: 
+        data = json.load(f)
     sasas = TemplateBase(template_file_path=r"F:\Programs3\Deep_Learning_Repo\pymaidol\src\tests\harder_demo\CodeLangTemplate.pml")
-    try:
-        exec("print(self.incontext_samsples)", {}, {"self": sasas})
-    except Exception as ex:
-        print(ex)
-    print("ok!")
+    kwargs = {"incontext_samples": data[0:3], "query_sample": data[3]}
+    prompt = sasas.Render(kwargs)
+    print(prompt)
     
 if __name__ == "__main__":
     main()

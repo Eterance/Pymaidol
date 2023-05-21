@@ -64,3 +64,8 @@ class BranchError(BaseException):
     @property
     def Message(self):
         return f'{self.__class__.__name__} at {self.position.FullDescription}: Lacking "if" statement'
+    
+class WrongForStatement(BaseException):
+    @property
+    def Message(self):
+        return f'{self.__class__.__name__} at {self.position.FullDescription}: Wrong "for" statement'
