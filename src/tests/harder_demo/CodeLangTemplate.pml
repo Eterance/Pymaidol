@@ -21,21 +21,7 @@ from tqdm import tqdm
 
 Question: Write a @(item["lang"]) program that prints "Hello World!" to the console. 
 Code: @(item["code"]) (@@(item["code"]))
-目前的count： @(count)                  
-    @if (count >= 2)
-    {
-> 2!
-    }
-    @elif (count < 0) {
-    < 0???
-    }
-    @elif (count == 0) {
-== 0
-    }
-    @else
-    {
-nothing
-    }
+目前的count： @(count), @if (count >= 2){> 2!} @elif (count < 0) {< 0???} @elif (count == 0) {== 0} @else  {nothing}
 
 @{count+=1}
 }    
@@ -44,9 +30,7 @@ nothing
 {
 @{count -= 1}
 count == @(count)
-    @if (count < 0)
-    {
-        @break;  
+@if (count < 0) {@break;
     }
 }
 Question: Write a @(self.query_sample['lang']) program that prints "Hello World!" to the console.

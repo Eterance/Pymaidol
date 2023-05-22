@@ -1,6 +1,6 @@
 from pymaidol.Errors import BranchError, ElseExtraConditionError, LackingConditionError
 from pymaidol.Nodes import (BaseNode, BranchRole, ElifNode, ElseNode,
-                            ForNode, IfNode, WhileNode)
+                            ForNode, IfNode, TextNode, WhileNode)
 from pymaidol.Traversers import PreOrderTraverser
 
 
@@ -35,23 +35,40 @@ class SyntaxChecker():
         index = father.children.index(node)
         index += 1
         previous = node
+        possible_gapping_whitespace_index:list[int] = []
         # 检查后续连续的 elif 和 else 结点，将它们构造成以 if 结点为头结点的链表
         while index < len(father.children):
             current = father.children[index]
-            if not isinstance(current, (ElifNode, ElseNode)):
-                break
-            else:
+            if isinstance(current, (ElifNode, ElseNode)):                
                 current.previous_branch = None
                 current.next_branch = None
                 if isinstance(current, ElifNode) and current.condition is None:
                     raise LackingConditionError(current.start)
                 if isinstance(current, ElseNode) and current.condition is not None:
                     raise ElseExtraConditionError(current.start)
+                # 设置链表
                 previous.next_branch = current
                 current.previous_branch = previous
-                previous = current
-                # 本分支结点不再能从父结点进入，只能从上一个分支结点进入
+                previous = current                
+                # 本分支结点不再能从父结点进入，只能从上一个分支结点进入                
                 father.children.pop(index)
+                # 倒序删除间隔的空白符
+                for i in reversed(possible_gapping_whitespace_index):                   
+                    father.children.pop(i)
+                index -= len(possible_gapping_whitespace_index)
+                possible_gapping_whitespace_index.clear()
+                # else 后面不会再有分支结点，直接退出
+                if isinstance(current, ElseNode):                    
+                    break
+            elif isinstance(current, TextNode):                
+                if current.content.strip() == '':
+                    # 虽然中间插了文本结点，但是全是空白符，可以忽略
+                    possible_gapping_whitespace_index.append(index)
+                    index += 1
+                else:
+                    break
+            else:
+                break
     
     def _loop_node_condition_check(self, sender:PreOrderTraverser, node:ForNode|WhileNode):
         if node.condition is None:

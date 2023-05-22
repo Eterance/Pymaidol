@@ -11,7 +11,7 @@ from pymaidol.keywords import (KeywordsEnum, NonTerminalKeywords,
                                TerminalKeywords, TranslateKeywords2Type)
 from pymaidol.Nodes import (AnnotationNode, BaseNode, CodeBlockNode, EmptyNode,
                             BodyComponent, NonTerminalNode, ShowBlockNode,
-                            TerminalNode, TextNode)
+                            TerminalNode, TextNode, VisibleRole)
 from pymaidol.Positions import Position
 from pymaidol.Traversers import PreOrderTraverser
 
@@ -33,6 +33,8 @@ class Parser:
         self._last_line_final_char_index = -1
         self.template:str = template
         self.__used = False
+        # 用于记录当前行是否有可见字符。注意：“当前行”的定义是当前 node 的 start 所在行，而不是当前字符所在行。
+        self._is_line_of_current_start_has_visible_content = False
         
         self.clean_trailing_whitespaces:bool = True
     
@@ -118,6 +120,8 @@ class Parser:
         self._current_node.end = Position(end_line, end, total_end)
         if self._current_node.content != "":
             self.root.children.append(self._current_node)
+            if isinstance(self._current_node, VisibleRole):
+                self._is_line_of_current_start_has_visible_content = True
     
     def _end_current_part_at_this_char(self):
         end_line = self._current_position.line_index
@@ -126,6 +130,8 @@ class Parser:
         self._current_node.end = Position(end_line, end, total_end)
         if self._current_node.content != "":
             self.root.children.append(self._current_node)
+            if isinstance(self._current_node, VisibleRole):
+                self._is_line_of_current_start_has_visible_content = True
     
     def _create_new_node_at_current_char(self, type:type[BaseNode]=TextNode, **kwargs):
         self._current_node = type(
@@ -310,17 +316,37 @@ class Parser:
             # 抛弃左大括号后跟的掉空白符以及第一个换行符，也就是等于将body的第一行放到左大括号后面
             self._consume_current_char_index(len(whitespace_peek)+1)
     
+    def _is_leading_continuous_whitespaces(self):
+        if len(self.root.children) > 0 \
+            and isinstance(self.root.children[-1], TextNode) \
+            and self.root.children[-1].content.strip() == "" \
+            and self.root.children[-1].start.line_index == self._current_node.start.line_index \
+            and self.root.children[-1].start.char_index == 0 \
+            :
+            return True
+        else:
+            return False
+        
+    def _try_discard_leading_continuous_whitespaces(self):
+        # 清除当前 node 的行首前导空白符
+        # 上一个 text 结点是当前结点的前导空白符的判断标准：
+        # 1. 上一个结点是 TextNode，并且全是空白符
+        # 2. 上一个结点的 start 位置和当前结点的 start 位置在同一行
+        # 3. 上一个结点是从行首开始计数的（start.char_index == 0）
+        if len(self.root.children) > 0 \
+            and isinstance(self.root.children[-1], TextNode) \
+            and self.root.children[-1].content.strip() == "" \
+            and self.root.children[-1].start.line_index == self._current_node.start.line_index \
+            and self.root.children[-1].start.char_index == 0 \
+            :
+            self._is_line_of_current_start_has_visible_content = False
+            self._current_node.start = self.root.children[-1].start
+            self.root.children.pop()
+        
     def _non_terminal_node_parse(self, keyword_type:KeywordsEnum):
         self._end_current_node_at_last_char()
         self._create_new_node_at_current_char(TranslateKeywords2Type(keyword_type))
-        assert isinstance(self._current_node, NonTerminalNode)  
-        # 清除前导空白符（如果这一行前面没有其他东西，也就是有缩进）
-        if len(self.root.children) > 0 \
-            and self.root.children[-1].start.line_index == self._current_node.start.line_index \
-            and self.root.children[-1].content.strip() == "":
-            #self._current_node.content = f"{self._root.children[-1].content}{self._current_node.content}"
-            self._current_node.start = self.root.children[-1].start
-            self.root.children.pop()
+        assert isinstance(self._current_node, NonTerminalNode)
         # 消费@关键词
         self._current_node.content = f"{self._current_node.content}{self._current_char}{keyword_type.value}"
         self._consume_current_char_index(len(keyword_type.value)+1)
@@ -347,15 +373,20 @@ class Parser:
             # 消费后，当前的字符应该是左大括号后的body的第一个字符
             self._try_discard_continuous_whitespaces_until_linefeed()
             self._current_node.body, body_start, body_end = self._consume_and_pair('{', '}', is_include_right=False)
-            # 清除右大括号前的空白符，遇到换行符停止（不清除换行符）
+            # 如果右括号单独一行，清除右大括号前的空白符，遇到换行符停止（不清除换行符）
+            is_right_brace_start_of_new_line = False
             whitespace, after_whitespace_peek = self._peek_while_from_tail(self._current_node.body, [' ', '\t'])
             if after_whitespace_peek.endswith('\n'):
+                is_right_brace_start_of_new_line = True
                 self._current_node.body = after_whitespace_peek
                 body_end = Position(body_end.line_index, body_end.char_index-len(whitespace), body_end.total-len(whitespace))
             # 右大括号
-            self._current_node.append_content("}")    
+            self._current_node.append_content("}")
             self._consume_current_char_index()
-            self._try_discard_continuous_whitespaces_until_linefeed()
+            # TODO：如果子结点都是不可见，并且if单独一行，那么把换行删除
+            # 如果右括号单独一行, 清除右大括号后的空白符，遇到第一个换行符停止（清除换行符）
+            if is_right_brace_start_of_new_line == True:
+                self._try_discard_continuous_whitespaces_until_linefeed()
             
             # 处理子结点
             sub_parser = Parser(self.template, self._current_node, body_start, body_end)
@@ -378,13 +409,10 @@ class Parser:
         # 消费掉分号
         self._consume_current_char_index()
         # 如果这一行只有终结符关键字，清除前导后随空白符和换行
-        if (len(self.root.children) > 0 \
-            and self.root.children[-1].start.line_index == self._current_node.start.line_index \
-            and self.root.children[-1].content.strip() == "")\
+        if self._is_leading_continuous_whitespaces()\
             and self._is_continuous_whitespaces_until_linefeed():
             
-            self._current_node.start = self.root.children[-1].start
-            self.root.children.pop()
+            self._try_discard_leading_continuous_whitespaces()
             self._try_discard_continuous_whitespaces_until_linefeed()
         
         self._end_current_node_at_last_char()
@@ -400,6 +428,7 @@ class Parser:
                 self._consume_current_char_index()
                 self._end_current_node_at_last_char()
                 self._create_new_node_at_current_char()
+                self._is_line_of_current_start_has_visible_content = False
             
             # 注释处理
             elif (_detect_result := self._detect_annotation()) is not None:
