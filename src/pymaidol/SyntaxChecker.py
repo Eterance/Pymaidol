@@ -62,5 +62,3 @@ class SyntaxChecker():
         # 如果触发这个方法，说明有游离的 elif 或 else 结点
         if isinstance(node, (ElifNode, ElseNode)):
             raise BranchError(node.start)
-    
-    # TODO: 检查 break 和 continue ，并找到对应的循环结点

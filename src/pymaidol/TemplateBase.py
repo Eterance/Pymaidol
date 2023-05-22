@@ -5,10 +5,7 @@ from pymaidol.Executor import Executor
 from pymaidol.Parser import Parser
 from abc import ABC, abstractmethod
 import inspect
-
 from pymaidol.SyntaxChecker import SyntaxChecker
-
-sss = 20
 
 class TemplateBase(ABC):
     @abstractmethod
@@ -49,7 +46,7 @@ class TemplateBase(ABC):
             raise fex
     
     @final
-    def Render(self, inject_kwargs:dict[str, Any]) -> str:
+    def Render(self, inject_kwargs:Optional[dict[str, Any]] = None) -> str:
         global_vars:dict[str, Any] = {}
         local_vars = {"self": self}
         if inject_kwargs is not None:

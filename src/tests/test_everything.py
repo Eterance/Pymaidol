@@ -39,9 +39,9 @@ class son(father):
 def main():
     with open(r"F:\Programs3\Deep_Learning_Repo\pymaidol\src\tests\harder_demo\codelang.json", "r", encoding='utf-8') as f: 
         data = json.load(f)
-    sasas = CodeLangTemplate()
+    clt = CodeLangTemplate(data[0:3], data[3])
     kwargs = {"incontext_samples": data[0:3], "query_sample": data[3]}
-    prompt = sasas.Render(kwargs)
+    prompt = clt.Render()
     print(prompt)
     
 if __name__ == "__main__":

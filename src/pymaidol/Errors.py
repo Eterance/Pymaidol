@@ -69,3 +69,30 @@ class WrongForStatement(BaseException):
     @property
     def Message(self):
         return f'{self.__class__.__name__} at {self.position.FullDescription}: Wrong "for" statement'
+
+class PythonExecutionError(BaseException):
+    def __init__(self, position: Position, error:Exception):
+        super().__init__(position)
+        self.error:Exception = error
+    
+    @property
+    def Message(self):
+        return f'{self.__class__.__name__} at {self.position.FullDescription}: \n{str(self.error)}'
+    
+class TypeException(BaseException):
+    def __init__(self, position: Position, description:str):
+        super().__init__(position)
+        self.description = description
+        
+    @property
+    def Message(self):
+        return f'{self.__class__.__name__} at {self.position.FullDescription}: {self.description}'
+    
+class NameException(BaseException):
+    def __init__(self, position: Position, description:str):
+        super().__init__(position)
+        self.description = description
+        
+    @property
+    def Message(self):
+        return f'{self.__class__.__name__} at {self.position.FullDescription}: {self.description}'

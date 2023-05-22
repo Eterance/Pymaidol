@@ -289,12 +289,18 @@ class Parser:
         """
         检查剩余的字符串是否以 char_list 中的任意一个开头
         """
-        # TODO: 当 break, continue 单独一行时，消除前导、后随空白符和换行符
         _peek, _ = self._peek_until([';'])
         for keyword_type in TerminalKeywords:
             if _peek == keyword_type.value:
                 return keyword_type
         return None
+    
+    def _is_continuous_whitespaces_until_linefeed(self):
+        whitespace_peek, after_whitespace_peek = self._peek_while([' ', '\t'])
+        if after_whitespace_peek.startswith('\n'):
+            return True
+        else:
+            return False
     
     def _try_discard_continuous_whitespaces_until_linefeed(self):
         """试图清除从当前位置开始的连续的空白符，直到遇到换行符为止。如果该行有内容，则不会清除任何空白符。
@@ -337,6 +343,7 @@ class Parser:
             # 关键词与左大括号之间的空白符、换行符，和左大括号全部消费            
             self._current_node.append_content(peek + "{")
             self._consume_current_char_index(len(peek)+1)
+            # 抛弃左大括号后跟的掉空白符以及第一个换行符，也就是等于将body的第一行放到左大括号后面
             # 消费后，当前的字符应该是左大括号后的body的第一个字符
             self._try_discard_continuous_whitespaces_until_linefeed()
             self._current_node.body, body_start, body_end = self._consume_and_pair('{', '}', is_include_right=False)
@@ -370,6 +377,16 @@ class Parser:
         self._consume_current_char_index(len(keyword_type.value)+1)
         # 消费掉分号
         self._consume_current_char_index()
+        # 如果这一行只有终结符关键字，清除前导后随空白符和换行
+        if (len(self.root.children) > 0 \
+            and self.root.children[-1].start.line_index == self._current_node.start.line_index \
+            and self.root.children[-1].content.strip() == "")\
+            and self._is_continuous_whitespaces_until_linefeed():
+            
+            self._current_node.start = self.root.children[-1].start
+            self.root.children.pop()
+            self._try_discard_continuous_whitespaces_until_linefeed()
+        
         self._end_current_node_at_last_char()
         self._create_new_node_at_current_char()
     

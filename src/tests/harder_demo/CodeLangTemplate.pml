@@ -13,7 +13,7 @@ from tqdm import tqdm
 
 @{count=1}
 @{dict2 = {1:"1212", 2:"3asx"}}
-@for(index, item in enumerate(incontext_samples))
+@for(index, item in enumerate(self.incontext_samples))
 {
 -- Question @(index+1)       # 这是注释
 # 这也是注释
@@ -38,14 +38,16 @@ nothing
     }
 
 @{count+=1}
-}
-    
+}    
 -- Question @(count)
 @while(True)
 {
 @{count -= 1}
 count == @(count)
-    @if (count < 0){@break;}
+    @if (count < 0)
+    {
+        @break;  
+    }
 }
-Question: Write a @(query_sample['lang']) program that prints "Hello World!" to the console.
+Question: Write a @(self.query_sample['lang']) program that prints "Hello World!" to the console.
 Code:
