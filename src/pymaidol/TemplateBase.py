@@ -1,12 +1,12 @@
 
-import os
-import time
-from typing import Any, Optional, final
-from pymaidol.Executor import Executor
-from pymaidol.Parser import Parser
-from abc import ABC, abstractmethod
 import inspect
-from pymaidol.SyntaxChecker import SyntaxChecker
+from abc import ABC, abstractmethod
+from typing import Any, Optional, final
+
+from .Executor import Executor
+from .Parser import Parser
+from .SyntaxChecker import SyntaxChecker
+
 
 class TemplateBase(ABC):
     @abstractmethod
@@ -42,7 +42,7 @@ class TemplateBase(ABC):
         else:
             # 获取类的文件路径
             # https://stackoverflow.com/a/697395
-            self._template_file_path = inspect.getfile(self.__class__)[:-3] + ".pml"
+            self._template_file_path = inspect.getfile(self.__class__)[:-3] + ".pymd"
             self._template = self._ReadTemplate(self._template_file_path)
         self._rendered = None
         self._node = Parser(self._template).Parse()

@@ -5,6 +5,9 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "pymaidol"
 description = "A markup gramma that embed python code into text"
+dependencies = [
+  "PythonDelegate>=0.1.0",
+  ]
 readme = "README.md"
 keywords= ["Prompt", "Markup Language", "NLP", "AI", "GPT"]
 requires-python = ">=3.10"

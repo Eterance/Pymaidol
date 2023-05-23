@@ -2,10 +2,11 @@ from abc import ABC, abstractmethod
 
 from pythondelegate.event_handler import EventHandler
 
-from pymaidol.Nodes import (AnnotationNode, BaseNode, BodyComponent, BranchRole, BreakNode, CodeBlockNode, ComponentOrRole,
-                            ContinueNode, ElifNode, ElseNode, EmptyNode,
-                            ForNode, IfNode, InvisibleRole, LoopRole, NonTerminalNode, ShowBlockNode,
-                            TerminalNode, TextNode, VisibleRole, WhileNode)
+from .Nodes import (AnnotationNode, BaseNode, BodyComponent, BranchRole,
+                    BreakNode, CodeBlockNode, ComponentOrRole, ContinueNode,
+                    ElifNode, ElseNode, EmptyNode, ForNode, IfNode,
+                    InvisibleRole, LoopRole, NonTerminalNode, ShowBlockNode,
+                    TerminalNode, TextNode, VisibleRole, WhileNode)
 
 
 class TraverserBase(ABC):

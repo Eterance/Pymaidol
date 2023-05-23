@@ -37,6 +37,8 @@ class son(father):
     
 
 def main():
+    message = f'Fail: file 23 already exist'
+    print(f'\033[0;32;49m{message}\033[0m')
     with open(r"F:\Programs3\Deep_Learning_Repo\pymaidol\src\tests\harder_demo\codelang.json", "r", encoding='utf-8') as f: 
         data = json.load(f)
     clt = CodeLangTemplate(data[0:3], data[3])

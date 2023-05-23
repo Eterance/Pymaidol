@@ -1,5 +1,9 @@
 from enum import Enum
-from pymaidol.Nodes import BaseNode, BreakNode, CodeBlockNode, ElifNode, ElseNode, ForNode, IfNode, NonTerminalNode, ShowBlockNode, TerminalNode, TextNode, AnnotationNode, WhileNode
+
+from .Nodes import (AnnotationNode, BaseNode, BreakNode, CodeBlockNode,
+                   ElifNode, ElseNode, ForNode, IfNode, NonTerminalNode,
+                   ShowBlockNode, TerminalNode, TextNode, WhileNode)
+
 
 class KeywordsEnum(Enum):
     If:str = "if"

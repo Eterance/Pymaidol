@@ -1,13 +1,16 @@
 
-from typing import Any
 from collections.abc import Iterable
 from enum import Enum
-from pymaidol.Errors import LackingConditionError, NameException, PythonExecutionError, TypeException, WrongForStatement
-from pymaidol.Nodes import (AnnotationNode, BaseNode, BodyComponent, BranchRole, BreakNode, CodeBlockNode, ComponentOrRole,
-                            ContinueNode, ElifNode, ElseNode, EmptyNode,
-                            ForNode, IfNode, InvisibleRole, LoopRole, NonTerminalNode, ShowBlockNode,
-                            TerminalNode, TextNode, VisibleRole, WhileNode)
-from pymaidol.Traversers import PreOrderTraverser
+from typing import Any
+
+from .Errors import (LackingConditionError, NameException, PythonExecutionError,
+                    TypeException, WrongForStatement)
+from .Nodes import (AnnotationNode, BaseNode, BodyComponent, BranchRole,
+                   BreakNode, CodeBlockNode, ComponentOrRole, ContinueNode,
+                   ElifNode, ElseNode, EmptyNode, ForNode, IfNode,
+                   InvisibleRole, LoopRole, NonTerminalNode, ShowBlockNode,
+                   TerminalNode, TextNode, VisibleRole, WhileNode)
+
 
 class ControlResultEnum(Enum):
     Default = "Default"

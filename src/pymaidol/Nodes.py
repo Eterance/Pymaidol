@@ -1,7 +1,9 @@
-from typing import Optional
-from pymaidol.AnnotationTypeEnum import AnnotationTypeEnum
-from pymaidol.Positions import Position
 from abc import ABC
+from typing import Optional
+
+from .AnnotationTypeEnum import AnnotationTypeEnum
+from .Positions import Position
+
 
 class ComponentOrRole(ABC):
     '''

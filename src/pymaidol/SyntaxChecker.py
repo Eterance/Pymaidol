@@ -1,7 +1,7 @@
-from pymaidol.Errors import BranchError, ElseExtraConditionError, LackingConditionError
-from pymaidol.Nodes import (BaseNode, BranchRole, ElifNode, ElseNode,
-                            ForNode, IfNode, TextNode, WhileNode)
-from pymaidol.Traversers import PreOrderTraverser
+from .Errors import BranchError, ElseExtraConditionError, LackingConditionError
+from .Nodes import (BaseNode, BranchRole, ElifNode, ElseNode, ForNode, IfNode,
+                   TextNode, WhileNode)
+from .Traversers import PreOrderTraverser
 
 
 class SyntaxChecker():
