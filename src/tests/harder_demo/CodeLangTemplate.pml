@@ -30,8 +30,10 @@ Code: @(item["code"]) (@@(item["code"]))
 {
 @{count -= 1}
 count == @(count)
-@if (count < 0) {@break;
-    }
+@if (count < 0) {@break;}
+@else{
+count not < 0!
+}
 }
 Question: Write a @(self.query_sample['lang']) program that prints "Hello World!" to the console.
 Code:

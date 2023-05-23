@@ -218,7 +218,7 @@ class Parser:
         self._current_node.body, _, _ = self._consume_and_pair(pair_left, pair_right, is_include_right)
         # 结束
         if is_clean_whitespace == True:
-            self._try_discard_continuous_whitespaces_until_linefeed()
+            self._try_discard_continuous_whitespaces_with_linefeed()
         self._end_current_node_at_last_char()
         self._create_new_node_at_current_char()
         
@@ -308,7 +308,7 @@ class Parser:
         else:
             return False
     
-    def _try_discard_continuous_whitespaces_until_linefeed(self):
+    def _try_discard_continuous_whitespaces_with_linefeed(self):
         """试图清除从当前位置开始的连续的空白符，直到遇到换行符为止。如果该行有内容，则不会清除任何空白符。
         """
         whitespace_peek, after_whitespace_peek = self._peek_while([' ', '\t'])
@@ -371,7 +371,7 @@ class Parser:
             self._consume_current_char_index(len(peek)+1)
             # 抛弃左大括号后跟的掉空白符以及第一个换行符，也就是等于将body的第一行放到左大括号后面
             # 消费后，当前的字符应该是左大括号后的body的第一个字符
-            self._try_discard_continuous_whitespaces_until_linefeed()
+            self._try_discard_continuous_whitespaces_with_linefeed()
             self._current_node.body, body_start, body_end = self._consume_and_pair('{', '}', is_include_right=False)
             # 如果右括号单独一行，清除右大括号前的空白符，遇到换行符停止（不清除换行符）
             is_right_brace_start_of_new_line = False
@@ -383,20 +383,31 @@ class Parser:
             # 右大括号
             self._current_node.append_content("}")
             self._consume_current_char_index()
-            # TODO：如果子结点都是不可见，并且if单独一行，那么把换行删除
-            # 如果右括号单独一行, 清除右大括号后的空白符，遇到第一个换行符停止（清除换行符）
-            if is_right_brace_start_of_new_line == True:
-                self._try_discard_continuous_whitespaces_until_linefeed()
             
             # 处理子结点
             sub_parser = Parser(self.template, self._current_node, body_start, body_end)
             sub_parser.clean_trailing_whitespaces = False
             sub_parser.Parse()
             
+            # 如果子结点都是不可见，并且本分支结点单独一行；           
+            # 或者如果右括号单独一行, 清除右大括号后的空白符，遇到第一个换行符停止（清除换行符）
+            if (self._is_children_have_visible_content(self._current_node) == False\
+                and self._current_node.start.line_index == self._current_position.line_index)\
+                or is_right_brace_start_of_new_line == True:
+                self._try_discard_continuous_whitespaces_with_linefeed()
+            
             self._end_current_node_at_last_char()
             self._create_new_node_at_current_char()
         else:
             raise UnexpectedTokenError(self._current_position, ['{'], after_peek[0])
+        
+    def _is_children_have_visible_content(self, node:NonTerminalNode):
+        for child in node.children:
+            if isinstance(child, VisibleRole):
+                return True
+            elif isinstance(child, NonTerminalNode) and self._is_children_have_visible_content(child):
+                return True
+        return False
     
     def _terminal_keyword_process(self, keyword_type:KeywordsEnum):
         self._end_current_node_at_last_char()
@@ -413,7 +424,7 @@ class Parser:
             and self._is_continuous_whitespaces_until_linefeed():
             
             self._try_discard_leading_continuous_whitespaces()
-            self._try_discard_continuous_whitespaces_until_linefeed()
+            self._try_discard_continuous_whitespaces_with_linefeed()
         
         self._end_current_node_at_last_char()
         self._create_new_node_at_current_char()
