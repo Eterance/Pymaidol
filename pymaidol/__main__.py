@@ -29,5 +29,5 @@ else:
     with open(code_file_path, 'w', encoding='utf-8') as f:
         f.write(template.Render())
         f.close()
-    message = f'Success: file "{template_file_path}" created'
+    message = f'Success: file "{code_file_path}" created'
     print(f'\033[0;32;49m{message}\033[0m')
