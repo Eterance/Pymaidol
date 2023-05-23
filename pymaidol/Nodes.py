@@ -1,8 +1,8 @@
 from abc import ABC
 from typing import Optional
 
-from .AnnotationTypeEnum import AnnotationTypeEnum
-from .Positions import Position
+from pymaidol.AnnotationTypeEnum import AnnotationTypeEnum
+from pymaidol.Positions import Position
 
 
 class ComponentOrRole(ABC):

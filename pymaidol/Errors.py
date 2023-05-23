@@ -1,4 +1,4 @@
-from .Positions import Position
+from pymaidol.Positions import Position
 
 
 class BaseException(Exception):

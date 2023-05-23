@@ -1,6 +1,6 @@
 from enum import Enum
 
-from .Nodes import (AnnotationNode, BaseNode, BreakNode, CodeBlockNode,
+from pymaidol.Nodes import (AnnotationNode, BaseNode, BreakNode, CodeBlockNode,
                    ElifNode, ElseNode, ForNode, IfNode, NonTerminalNode,
                    ShowBlockNode, TerminalNode, TextNode, WhileNode)
 

@@ -3,9 +3,9 @@ from collections.abc import Iterable
 from enum import Enum
 from typing import Any
 
-from .Errors import (LackingConditionError, NameException, PythonExecutionError,
+from pymaidol.Errors import (LackingConditionError, NameException, PythonExecutionError,
                     TypeException, WrongForStatement)
-from .Nodes import (AnnotationNode, BaseNode, BodyComponent, BranchRole,
+from pymaidol.Nodes import (AnnotationNode, BaseNode, BodyComponent, BranchRole,
                    BreakNode, CodeBlockNode, ComponentOrRole, ContinueNode,
                    ElifNode, ElseNode, EmptyNode, ForNode, IfNode,
                    InvisibleRole, LoopRole, NonTerminalNode, ShowBlockNode,

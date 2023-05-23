@@ -3,9 +3,9 @@ import inspect
 from abc import ABC, abstractmethod
 from typing import Any, Optional, final
 
-from .Executor import Executor
-from .Parser import Parser
-from .SyntaxChecker import SyntaxChecker
+from pymaidol.Executor import Executor
+from pymaidol.Parser import Parser
+from pymaidol.SyntaxChecker import SyntaxChecker
 
 
 class TemplateBase(ABC):

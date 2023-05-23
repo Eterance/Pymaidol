@@ -1,18 +1,18 @@
 from enum import Enum
 from typing import Optional, Union
 
-from .AnnotationTypeEnum import (AnnotationTypeEnum, FullAnnotationTypes,
+from pymaidol.AnnotationTypeEnum import (AnnotationTypeEnum, FullAnnotationTypes,
                                 MultiLineAnnotationTypeEnum,
                                 SingleLineAnnotationTypeEnum)
-from .Errors import (MultiLineAnnotationFormatError, UnexpectedTokenError,
+from pymaidol.Errors import (MultiLineAnnotationFormatError, UnexpectedTokenError,
                     UnknownEmbedIdentifierError)
-from .keywords import (KeywordsEnum, NonTerminalKeywords, TerminalKeywords,
+from pymaidol.keywords import (KeywordsEnum, NonTerminalKeywords, TerminalKeywords,
                       TranslateKeywords2Type)
-from .Nodes import (AnnotationNode, BaseNode, BodyComponent, CodeBlockNode,
+from pymaidol.Nodes import (AnnotationNode, BaseNode, BodyComponent, CodeBlockNode,
                    EmptyNode, NonTerminalNode, ShowBlockNode, TerminalNode,
                    TextNode, VisibleRole)
-from .Positions import Position
-from .Traversers import PreOrderTraverser
+from pymaidol.Positions import Position
+from pymaidol.Traversers import PreOrderTraverser
 
 
 class Parser:    
