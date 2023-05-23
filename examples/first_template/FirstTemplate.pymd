@@ -1,0 +1,2 @@
+@{import time}
+Now (@(time.ctime())), Say "@(says)" using @(self.package_name)!

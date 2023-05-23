@@ -5,7 +5,7 @@ import sys
 from tqdm import tqdm
 
 
-ROOT_DIR = os.path.join(os.path.dirname(__file__), "../../")
+ROOT_DIR = os.path.join(os.path.dirname(__file__), "../")
 SRC_DIR = os.path.join(ROOT_DIR, "src")
 sys.path.append(ROOT_DIR)
 sys.path.append(SRC_DIR)
@@ -37,9 +37,7 @@ class son(father):
     
 
 def main():
-    message = f'Fail: file 23 already exist'
-    print(f'\033[0;32;49m{message}\033[0m')
-    with open(r"F:\Programs3\Deep_Learning_Repo\pymaidol\src\tests\harder_demo\codelang.json", "r", encoding='utf-8') as f: 
+    with open(r"F:\Programs3\Deep_Learning_Repo\pymaidol\tests\harder_demo\codelang.json", "r", encoding='utf-8') as f: 
         data = json.load(f)
     clt = CodeLangTemplate(data[0:3], data[3])
     kwargs = {"incontext_samples": data[0:3], "query_sample": data[3]}
