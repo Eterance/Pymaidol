@@ -7,13 +7,18 @@ from pymaidol.Executor import Executor
 from pymaidol.Parser import Parser
 from pymaidol.SyntaxChecker import SyntaxChecker
 from pymaidol.TemplateRenderer import TemplateRenderer
+from pymaidol.AnnotationType import FULL_ANNOTATION_TYPE, AnnotationTypeEnum
 
 
 class TemplateBase(ABC):
     @abstractmethod
-    def __init__(self, template:Optional[str]=None, template_file_path:Optional[str]=None) -> None:
+    def __init__(self, 
+                 template:Optional[str]=None, 
+                 template_file_path:Optional[str]=None,
+                 supported_annotation_types:'list[AnnotationTypeEnum]' = FULL_ANNOTATION_TYPE) -> None:
+        self.supported_annotation_types = supported_annotation_types
         self.HotReload(template, template_file_path)
-        self._rendered:Optional[str] = None
+        self._rendered:Optional[str] = None    
     
     @property
     def template(self): 
@@ -42,7 +47,7 @@ class TemplateBase(ABC):
             # https://stackoverflow.com/a/697395
             template_file_path = inspect.getfile(self.__class__)[:-3] + ".pymd"
             template = self._ReadTemplate(template_file_path)        
-        self._renderer = TemplateRenderer(template)
+        self._renderer = TemplateRenderer(template, self.supported_annotation_types)
     
     @final
     def _ReadTemplate(self, template_file_path)->str:

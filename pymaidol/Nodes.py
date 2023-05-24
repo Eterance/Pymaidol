@@ -1,7 +1,7 @@
 from abc import ABC
 from typing import Optional
 
-from pymaidol.AnnotationTypeEnum import AnnotationTypeEnum
+from pymaidol.AnnotationType import AnnotationTypeEnum
 from pymaidol.Positions import Position
 
 

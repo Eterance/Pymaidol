@@ -14,7 +14,7 @@ class MultiLineAnnotationTypeEnum(AnnotationTypeEnum):
     C:str = "/*"
     Html:str = "<!--"
     
-FullAnnotationTypes:list[AnnotationTypeEnum] = [
+FULL_ANNOTATION_TYPE:list[AnnotationTypeEnum] = [
     SingleLineAnnotationTypeEnum.Python,
     SingleLineAnnotationTypeEnum.C,
     MultiLineAnnotationTypeEnum.PythonSingleQuotation,

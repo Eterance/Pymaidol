@@ -1,7 +1,7 @@
 from enum import Enum
 from typing import Optional, Union
 
-from pymaidol.AnnotationTypeEnum import (AnnotationTypeEnum, FullAnnotationTypes,
+from pymaidol.AnnotationType import (AnnotationTypeEnum, FULL_ANNOTATION_TYPE,
                                 MultiLineAnnotationTypeEnum,
                                 SingleLineAnnotationTypeEnum)
 from pymaidol.Errors import (MultiLineAnnotationFormatError, UnexpectedTokenError,
@@ -15,7 +15,7 @@ from pymaidol.Positions import Position
 from pymaidol.Traversers import PreOrderTraverser
 
 
-class Parser:    
+class Parser:
     def __init__(
         self, 
         template:str, 
@@ -36,6 +36,7 @@ class Parser:
         self._is_line_of_current_start_has_visible_content = False
         
         self.clean_trailing_whitespaces:bool = True
+        self.supported_annotation_types:'list[AnnotationTypeEnum]' = FULL_ANNOTATION_TYPE
     
     @property
     def _current_char(self):
@@ -53,28 +54,29 @@ class Parser:
     def _remains_include_current_char(self):
         return self.template[self._current_position.total:]
     
-    def _detect_annotation(self, support_annotation_types:'list[AnnotationTypeEnum]'=FullAnnotationTypes):
+    def _detect_annotation(self):
         """
         检测注释类型。如果当前字符不是注释，则返回None，否则返回注释类型（注释的开始符）和注释的结束符。
         Args:
             support_annotation_types (list[AnnotationType], optional): 支持被检测的注释类型。默认为所有注释类型。
         """
-        if SingleLineAnnotationTypeEnum.Python in support_annotation_types:
+        supported_annotation_types = self.supported_annotation_types
+        if SingleLineAnnotationTypeEnum.Python in supported_annotation_types:
             if self._remains_include_current_char.startswith(SingleLineAnnotationTypeEnum.Python.value):
                 return SingleLineAnnotationTypeEnum.Python, '\n'
-        if SingleLineAnnotationTypeEnum.C in support_annotation_types:
+        if SingleLineAnnotationTypeEnum.C in supported_annotation_types:
             if self._remains_include_current_char.startswith(SingleLineAnnotationTypeEnum.C.value):
                 return SingleLineAnnotationTypeEnum.C, '\n'
-        if MultiLineAnnotationTypeEnum.PythonDoubleQuotation in support_annotation_types:
+        if MultiLineAnnotationTypeEnum.PythonDoubleQuotation in supported_annotation_types:
             if self._remains_include_current_char.startswith(MultiLineAnnotationTypeEnum.PythonDoubleQuotation.value):
                 return MultiLineAnnotationTypeEnum.PythonDoubleQuotation, '"""'
-        if MultiLineAnnotationTypeEnum.PythonSingleQuotation in support_annotation_types:
+        if MultiLineAnnotationTypeEnum.PythonSingleQuotation in supported_annotation_types:
             if self._remains_include_current_char.startswith(MultiLineAnnotationTypeEnum.PythonSingleQuotation.value):
                 return MultiLineAnnotationTypeEnum.PythonSingleQuotation, "'''"
-        if MultiLineAnnotationTypeEnum.C in support_annotation_types:
+        if MultiLineAnnotationTypeEnum.C in supported_annotation_types:
             if self._remains_include_current_char.startswith(MultiLineAnnotationTypeEnum.C.value):
                 return MultiLineAnnotationTypeEnum.C, '*/'
-        if MultiLineAnnotationTypeEnum.Html in support_annotation_types:
+        if MultiLineAnnotationTypeEnum.Html in supported_annotation_types:
             if self._remains_include_current_char.startswith(MultiLineAnnotationTypeEnum.Html.value):
                 return MultiLineAnnotationTypeEnum.Html, '-->'
         return None
