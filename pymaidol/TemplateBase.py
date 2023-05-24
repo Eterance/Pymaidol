@@ -6,19 +6,18 @@ from typing import Any, Optional, final
 from pymaidol.Executor import Executor
 from pymaidol.Parser import Parser
 from pymaidol.SyntaxChecker import SyntaxChecker
+from pymaidol.TemplateRenderer import TemplateRenderer
 
 
 class TemplateBase(ABC):
     @abstractmethod
-    def __init__(self, template:Optional[str]=None, template_file_path:Optional[str]=None) -> None:  
-        self._template:str = ""
-        self._template_file_path:Optional[str] = template_file_path
+    def __init__(self, template:Optional[str]=None, template_file_path:Optional[str]=None) -> None:
         self.HotReload(template, template_file_path)
         self._rendered:Optional[str] = None
     
     @property
     def template(self): 
-        return self._template
+        return self._renderer.template
     
     @property
     def rendered(self): 
@@ -35,19 +34,15 @@ class TemplateBase(ABC):
             template_file_path (Optional[str], optional): 模板设计文件路径. Defaults to None.
         """
         if template is not None:
-            self._template = template
+            pass
         elif template_file_path is not None:
-            self._template_file_path = template_file_path
-            self._template = self._ReadTemplate(self._template_file_path)
+            template = self._ReadTemplate(template_file_path)
         else:
             # 获取类的文件路径
             # https://stackoverflow.com/a/697395
-            self._template_file_path = inspect.getfile(self.__class__)[:-3] + ".pymd"
-            self._template = self._ReadTemplate(self._template_file_path)
-        self._rendered = None
-        self._node = Parser(self._template).Parse()
-        self._node = SyntaxChecker().Check(self._node)
-        self._executor = Executor(self._node)
+            template_file_path = inspect.getfile(self.__class__)[:-3] + ".pymd"
+            template = self._ReadTemplate(template_file_path)        
+        self._renderer = TemplateRenderer(template)
     
     @final
     def _ReadTemplate(self, template_file_path)->str:
@@ -64,10 +59,10 @@ class TemplateBase(ABC):
         local_vars = {"self": self}
         if inject_kwargs is not None:
             global_vars.update(inject_kwargs)
-        result = self._executor.Execute(global_vars, local_vars)
+        result = self._renderer.Render(global_vars, local_vars)
         self._rendered = result
         return result
     
     @final
     def TranslateToPython(self) -> str:
-        raise NotImplementedError()
+        return self._renderer.TranslateToPython()

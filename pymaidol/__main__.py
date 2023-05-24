@@ -8,6 +8,7 @@ parser.add_argument('-n', '--name', type=str, help="the class name of the pymaid
 parser.add_argument('-d', '--dir', type=str, help="the directory of the pymaidol files", default="")
 args = parser.parse_args()
 path = args.dir
+os.makedirs(path, exist_ok=True)
 template_file_path =  os.path.join(path, f'{args.name}.pymd')
 code_file_path =  os.path.join(path, f'{args.name}.py')
 # designer file
