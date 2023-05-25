@@ -20,14 +20,14 @@ class Position():
     def Default(cls):
         return cls(0, 0, 0)
     
-    def copy(self):
+    def Copy(self):
         return Position(self.__line_index, self.__char_index, self.__char_index_total)
     
     def __str__(self):
         return f"{self.line_index}:{self.char_index}({self.total})"
     
     @property
-    def FullDescription(self):
+    def full_description(self):
         return f"line {self.line_index} char {self.char_index} (total {self.total})"
     
     def __repr__(self):

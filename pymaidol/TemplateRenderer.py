@@ -35,7 +35,9 @@ class TemplateRenderer():
         return self._template
         
     @final
-    def Render(self, global_vars:dict, local_vars:dict) -> str:
+    def Render(self, local_vars:dict, global_vars:Optional[dict]=None) -> str:
+        if global_vars is None:
+            global_vars = {}
         return self._executor.Execute(global_vars, local_vars)
     
     @final

@@ -64,7 +64,7 @@ class TemplateBase(ABC):
         local_vars = {"self": self}
         if inject_kwargs is not None:
             global_vars.update(inject_kwargs)
-        result = self._renderer.Render(global_vars, local_vars)
+        result = self._renderer.Render(local_vars, global_vars)
         self._rendered = result
         return result
     

@@ -9,7 +9,7 @@ class BaseException(Exception):
         
     @property
     def Message(self):
-        return f"{self.__class__.__name__} at {self.position.FullDescription}: Error Occur\n{self.extra_detail}"
+        return f"{self.__class__.__name__} at {self.position.full_description}: Error Occur\n{self.extra_detail}"
     
     def __repr__(self) -> str:
         return self.Message
@@ -29,7 +29,7 @@ class UnexpectedTokenError(BaseException):
             expected_string = f'"{self.expected[0]}"'
         else:
             expected_string = f'{self.expected}'
-        return f'{self.__class__.__name__} at {self.position.FullDescription}: Expected {expected_string}, but got {self.got}\n{self.extra_detail}'
+        return f'{self.__class__.__name__} at {self.position.full_description}: Expected {expected_string}, but got {self.got}\n{self.extra_detail}'
 
 # Only use/happen in dev.
 class ImpossibleError(Exception):
@@ -38,7 +38,7 @@ class ImpossibleError(Exception):
 class MultiLineAnnotationFormatError(BaseException):
     @property
     def Message(self):
-        return f"{self.__class__.__name__} at {self.position.FullDescription}: When using multi-line annotation, the line where the terminator is located must not have any text other than the annotation."
+        return f"{self.__class__.__name__} at {self.position.full_description}: When using multi-line annotation, the line where the terminator is located must not have any text other than the annotation."
     
 class UnknownEmbedIdentifierError(BaseException):
     def __init__(self, position:Position, unknown_identifier:str):
@@ -47,28 +47,28 @@ class UnknownEmbedIdentifierError(BaseException):
     
     @property
     def Message(self):
-        return f'{self.__class__.__name__} at {self.position.FullDescription}: Unknown "@{self.unknown_identifier}". If you want to write "@" in template, use "@@" instead.'
+        return f'{self.__class__.__name__} at {self.position.full_description}: Unknown "@{self.unknown_identifier}". If you want to write "@" in template, use "@@" instead.'
 
 class LackingConditionError(BaseException):
     @property
     def Message(self):
-        return f'{self.__class__.__name__} at {self.position.FullDescription}: Need Condition'
+        return f'{self.__class__.__name__} at {self.position.full_description}: Need Condition'
 
 class ElseExtraConditionError(BaseException):
     @property
     def Message(self):
-        return f'{self.__class__.__name__} at {self.position.FullDescription}: "else" should not have any condition'
+        return f'{self.__class__.__name__} at {self.position.full_description}: "else" should not have any condition'
     
 
 class BranchError(BaseException):
     @property
     def Message(self):
-        return f'{self.__class__.__name__} at {self.position.FullDescription}: Lacking "if" statement'
+        return f'{self.__class__.__name__} at {self.position.full_description}: Lacking "if" statement'
     
 class WrongForStatement(BaseException):
     @property
     def Message(self):
-        return f'{self.__class__.__name__} at {self.position.FullDescription}: Wrong "for" statement'
+        return f'{self.__class__.__name__} at {self.position.full_description}: Wrong "for" statement'
 
 class PythonExecutionError(BaseException):
     def __init__(self, position: Position, error:Exception):
@@ -77,7 +77,7 @@ class PythonExecutionError(BaseException):
     
     @property
     def Message(self):
-        return f'{self.__class__.__name__} at {self.position.FullDescription}: \n{str(self.error)}'
+        return f'{self.__class__.__name__} at {self.position.full_description}: \n{str(self.error)}'
     
 class TypeException(BaseException):
     def __init__(self, position: Position, description:str):
@@ -86,7 +86,7 @@ class TypeException(BaseException):
         
     @property
     def Message(self):
-        return f'{self.__class__.__name__} at {self.position.FullDescription}: {self.description}'
+        return f'{self.__class__.__name__} at {self.position.full_description}: {self.description}'
     
 class NameException(BaseException):
     def __init__(self, position: Position, description:str):
@@ -95,4 +95,4 @@ class NameException(BaseException):
         
     @property
     def Message(self):
-        return f'{self.__class__.__name__} at {self.position.FullDescription}: {self.description}'
+        return f'{self.__class__.__name__} at {self.position.full_description}: {self.description}'

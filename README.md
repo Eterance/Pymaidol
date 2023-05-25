@@ -38,11 +38,16 @@ Success: file "FirstTemplate.py" created
 首先，用以下代码将 `FirstTemplate.pymd` 中的全部内容替换掉：
 
 ``` python
-from pymaidol.TemplateBase import TemplateBase
+from pymaidol import TemplateBase
+from pymaidol.AnnotationType import FULL_ANNOTATION_TYPE, AnnotationTypeEnum
 
 class FirstTemplate(TemplateBase):
-    def __init__(self, package_name:str, template: str | None = None, template_file_path: str | None = None) -> None:
-        super().__init__(template, template_file_path)
+    def __init__(self, 
+                 package_name:str, 
+                 template: str | None = None, 
+                 template_file_path: str | None = None, 
+                 supported_annotation_types: list[AnnotationTypeEnum] = FULL_ANNOTATION_TYPE) -> None:
+        super().__init__(template, template_file_path, supported_annotation_types)
         self.package_name = package_name
         
 def main():
@@ -73,6 +78,7 @@ Now (@(time.ctime())), Say "@(says)" using @(self.package_name)!
 Now (Tue May 23 19:21:19 2023), Say "Hello World" using Pymaidol!
 ```
 
-## 语法参考
+## 另请参阅
 
-请参阅 [Pymaidol 语法参考](docs/zh-cn//%E8%AF%AD%E6%B3%95%E5%8F%82%E8%80%83.md)
+- [Pymaidol 语法参考](docs/zh-cn/语法参考.md)
+- [Pymaidol_API目录](docs/zh-cn/Pymaidol_API%E7%9B%AE%E5%BD%95.md)

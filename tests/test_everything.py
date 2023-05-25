@@ -10,7 +10,7 @@ SRC_DIR = os.path.join(ROOT_DIR, "src")
 sys.path.append(ROOT_DIR)
 sys.path.append(SRC_DIR)
 from pymaidol.TemplateBase import TemplateBase
-from pymaidol.AnnotationTypeEnum import MultiLineAnnotationTypeEnum
+from pymaidol.AnnotationType import MultiLineAnnotationTypeEnum
 from tests.harder_demo.CodeLangTemplate import CodeLangTemplate
 
 gol = 23

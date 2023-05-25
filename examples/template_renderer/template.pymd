@@ -1,0 +1,8 @@
+@{import time}
+### START
+Current Time: @(time.ctime())
+---globals---
+@(global_vars)
+---locals---
+@(local_vars)
+### END
