@@ -28,6 +28,7 @@ class Executor:
         return self._root
         
     def Execute(self, global_var:dict[str, Any], local_var:dict[str, Any]) -> str:
+        self._prompt = ""
         self._recursive_traverse(self._root, global_var, local_var)
         return self._prompt
         

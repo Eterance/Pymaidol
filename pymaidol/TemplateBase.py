@@ -1,4 +1,4 @@
-
+import copy
 import inspect
 from abc import ABC, abstractmethod
 from typing import Any, Optional, final
@@ -15,8 +15,13 @@ class TemplateBase(ABC):
     def __init__(self, 
                  template:Optional[str]=None, 
                  template_file_path:Optional[str]=None,
-                 supported_annotation_types:'list[AnnotationTypeEnum]' = FULL_ANNOTATION_TYPE) -> None:
-        self.supported_annotation_types = supported_annotation_types
+                 supported_annotation_types:'list[AnnotationTypeEnum]' = FULL_ANNOTATION_TYPE,
+                 disable_annotation_types:'list[AnnotationTypeEnum]' = []) -> None:
+        self.supported_annotation_types = copy.deepcopy(supported_annotation_types) 
+        for annotation_type in disable_annotation_types:
+            for supported_annotation_type in self.supported_annotation_types:
+                if annotation_type.value == supported_annotation_type.value:
+                    self.supported_annotation_types.remove(supported_annotation_type)
         self.HotReload(template, template_file_path)
         self._rendered:Optional[str] = None    
     

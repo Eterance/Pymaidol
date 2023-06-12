@@ -29,6 +29,7 @@ from pymaidol.TemplateBase import TemplateBase
 - `template` (str, optional): 模板字符串。默认为 `None`。
 - `template_file_path` (str, optional): 模板文件路径。默认为 `None`。
 - `supported_annotation_types` (list[AnnotationTypeEnum], optional): 支持的注释类型列表。默认为所有注释类型（Python、C的单行与多行注释、HTML注释）。
+- `disable_annotation_types` (list[AnnotationTypeEnum], optional): 禁用的注释类型列表，使这些注释出现在渲染后的文本中。默认为空。禁用的优先级高于支持。例如，如果 `disable_annotation_types` 中包含 `AnnotationTypeEnum.SingleLineAnnotationTypeEnum.Python` （python 单行注释），则 `supported_annotation_types` 中无论是否包含它，都将被视为禁用该注释类型。
 
 当 `template` 与 `template_file_path` 都为 `None` 时，`TemplateBase` 类及其子类将试图读取在与其同一目录下、与其同名的模板文件 `.pymd`。如果两个都不为空，则优先使用 `template`。
 

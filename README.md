@@ -11,7 +11,7 @@ Pymaidol 是一种标记语法，用于将 Python 代码嵌入文本中，使得
 python >= 3.10
 
 ``` bash
-pip install Pymaidol
+pip install Pymaidol -i https://pypi.python.org/simple
 ```
 
 ## 第一个 Pymaidol 模板
