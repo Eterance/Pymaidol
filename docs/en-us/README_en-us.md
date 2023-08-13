@@ -85,5 +85,5 @@ Now (Tue May 23 19:21:19 2023), Say "Hello World" using Pymaidol!
 
 ## See Also
 
-- [Pymaidol Syntax Reference](docs/en-us/Syntax_Reference.md)
-- [Pymaidol_API Directory](docs/en-us/Pymaidol_API_Directory.md)
+- [Pymaidol Syntax Reference](Syntax_Reference.md)
+- [Pymaidol_API Directory](Pymaidol_API_Directory.md)
