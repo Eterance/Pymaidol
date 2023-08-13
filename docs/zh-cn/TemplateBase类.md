@@ -22,7 +22,7 @@ from pymaidol.TemplateBase import TemplateBase
 
 ## 构造函数
 
-### `TemplateBase(template, template_file_path, supported_annotation_types)` (virtual)
+### `TemplateBase(template, template_file_path, supported_annotation_types, disable_annotation_types)` (virtual)
 
 #### 参数
 
