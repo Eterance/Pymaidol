@@ -84,4 +84,4 @@ Now (Tue May 23 19:21:19 2023), Say "Hello World" using Pymaidol!
 ## 另请参阅
 
 - [Pymaidol 语法参考](zh-cn/语法参考.md)
-- [Pymaidol API 目录](zh-cn/Pymaidol_API%E7%9B%AE%E5%BD%95.md)
+- [Pymaidol API 目录](zh-cn/Pymaidol_API目录.md)
