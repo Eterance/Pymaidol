@@ -1,6 +1,6 @@
 # Pymaidol
 
-[简体中文](/README.md) | English
+[简体中文](README.md) | English
 
 **All English docs are translated by Chat-GPT. Feel free to submit a PR to improve the translation.**
 
@@ -85,5 +85,5 @@ Now (Tue May 23 19:21:19 2023), Say "Hello World" using Pymaidol!
 
 ## See Also
 
-- [Pymaidol Syntax Reference](Syntax_Reference.md)
-- [Pymaidol_API Directory](Pymaidol_API_Directory.md)
+- [Pymaidol Syntax Reference](en-us/Syntax_Reference.md)
+- [Pymaidol API Directory](en-us/Pymaidol_API_Directory.md)
