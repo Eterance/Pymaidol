@@ -1,6 +1,6 @@
 # Pymaidol
 
-[简体中文](README.md) | English
+[简体中文 (Simplified Chinese) ](README.md) | English
 
 Pymaidol is a markup syntax for embedding Python code into text, allowing the content to be dynamically changed at runtime.
 

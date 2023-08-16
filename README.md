@@ -1,6 +1,6 @@
 # Pymaidol
 
-简体中文 | [English](README.en-us.md)
+简体中文 (Simplified Chinese) | [English](README.en-us.md)
 
 Pymaidol 是一种标记语法，用于将 Python 代码嵌入文本中，使得文本在运行时可动态更改包含的内容。
 
@@ -18,4 +18,4 @@ pip install Pymaidol -i https://pypi.python.org/simple
 
 ## 文档
 
-参见： https://eterance.github.io/Pymaidol-Docs/
+参见： https://eterance.github.io/Pymaidol-Docs/zh-cn/
